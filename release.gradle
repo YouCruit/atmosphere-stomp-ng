@@ -1,0 +1,17 @@
+apply plugin: 'net.researchgate.release'
+
+
+release {
+    revertOnFail = false
+
+    // $version needs to be quoted so it is resolved at tag time
+    tagTemplate = "atmmosphere-ng-\$version-${new Date().format('yyyy-MM-dd-HHmm')}"
+
+
+    git {
+        requireBranch = ''
+    }
+
+}
+
+tasks.release.group = 'Release'

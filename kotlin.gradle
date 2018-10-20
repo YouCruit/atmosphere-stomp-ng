@@ -1,0 +1,75 @@
+apply plugin: 'kotlin'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'java'
+apply plugin: 'org.jlleitschuh.gradle.ktlint'
+apply plugin: "org.jmailen.kotlinter"
+
+def hasTests = file('src/test/kotlin').exists()
+
+def CI = Boolean.getBoolean("youcruit.ci")
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+
+    testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
+}
+
+sourceSets {
+    main {
+        kotlin.srcDirs += 'src/main/kotlin'
+    }
+    test {
+        kotlin.srcDirs += 'src/test/kotlin'
+    }
+}
+
+kapt {
+    useBuildCache = true
+}
+
+compileKotlin {
+    kotlinOptions {
+        languageVersion = "1.2"
+        apiVersion = "1.2"
+        jvmTarget = "$java_version"
+        freeCompilerArgs = ["-Xjsr305=strict", "-Xjvm-default=enable"]
+    }
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        languageVersion = "1.2"
+        apiVersion = "1.2"
+        jvmTarget = "$java_version"
+        freeCompilerArgs = ["-Xjsr305=strict", "-Xjvm-default=enable"]
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+test {
+    useJUnit()
+    includes = ['*Test*', '**/*Test*']
+    excludes = ['*INTTest*', '**/*INTTest*']
+    exclude '**/*INTTest'
+    ignoreFailures CI
+    forkEvery 10
+    maxParallelForks 4
+}
+
+ktlint {
+    debug = false
+    verbose = true
+    android = false
+//            reporter = "checkstyle"
+    ignoreFailures = false
+}
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+    classifier = 'source'
+}
+assemble.dependsOn sourceJar
+
