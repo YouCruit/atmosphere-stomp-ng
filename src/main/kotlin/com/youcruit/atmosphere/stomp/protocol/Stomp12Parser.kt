@@ -29,11 +29,10 @@ object Stomp12Parser : StompParser() {
         throw IOException("data too long")
     }
 
-    override val ByteArray.eol: Boolean
-        get() {
-            return when(size) {
-                1 -> this[0] == '\n'.toByte()
-                2 -> this[1] == '\r'.toByte() && this[0] == '\n'.toByte()
+    override fun eol(bytes: ByteArray): Boolean {
+            return when(bytes.size) {
+                1 -> bytes[0] == '\n'.toByte()
+                2 -> bytes[1] == '\r'.toByte() && bytes[0] == '\n'.toByte()
                 else -> false
             }
         }

@@ -35,7 +35,6 @@ class StompFrame(
 interface StompCommand
 
 enum class ClientStompCommand : StompCommand {
-    NULL,
     STOMP,
     CONNECT,
     DISCONNECT,

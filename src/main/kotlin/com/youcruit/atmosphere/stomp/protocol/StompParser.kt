@@ -82,10 +82,9 @@ abstract class StompParser {
         return key to value
     }
 
-    open val ByteArray.eol: Boolean
-        get() {
-            return when(size) {
-                1 -> this[0] == '\n'.toByte()
+    open fun eol(bytes: ByteArray): Boolean {
+            return when(bytes.size) {
+                1 -> bytes[0] == '\n'.toByte()
                 else -> false
             }
         }
