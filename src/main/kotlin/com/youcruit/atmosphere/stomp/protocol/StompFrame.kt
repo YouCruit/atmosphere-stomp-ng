@@ -10,6 +10,9 @@ class StompFrame(
     val body: ByteArray
 ) {
 
+    val destination: String
+        get() = headers["destination"]!!
+
     fun bodyAsString(): String {
         return body.toString(charset = charset)
     }

@@ -61,7 +61,7 @@ gradleLint {
 dependencies {
     compile "org.atmosphere:atmosphere-runtime:${atmosphere_version}"
 
-//    compile "org.apache.geronimo.specs:geronimo-servlet_3.0_spec:1.0"
+    compile "javax.servlet:javax.servlet-api:3.1.0"
 
     testCompile("org.apache.activemq:activemq-stomp:5.9.0") {
     }
