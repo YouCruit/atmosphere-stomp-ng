@@ -6,7 +6,7 @@ import org.atmosphere.cpr.AtmosphereResource
 import java.lang.reflect.Method
 
 internal class InjectingMethodInvocation(
-    private val method: Method,
+    val method: Method,
     private val obj: Any,
     private val bodyConverter: MessageDecoder<*>
 ) {

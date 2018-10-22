@@ -15,12 +15,12 @@ import org.atmosphere.annotation.Processor
 import org.atmosphere.config.AtmosphereAnnotation
 import org.atmosphere.cpr.AtmosphereFramework
 import org.atmosphere.util.uri.UriPattern
+import org.slf4j.LoggerFactory
 import java.lang.reflect.Method
 
 @AtmosphereAnnotation(StompEndpoint::class)
 internal class StompEndpointProcessor : Processor<Any> {
     private val messageDecoderCache = LinkedHashMap<Class<*>, MessageDecoder<*>?>()
-
 
     override fun handle(framework: AtmosphereFramework, annotatedClass: Class<Any>) {
         val obj = framework.newClassInstance(Any::class.java, annotatedClass)
@@ -42,6 +42,10 @@ internal class StompEndpointProcessor : Processor<Any> {
     }
 
     private fun stompService(stompServiceAnnotation: StompService, framework: AtmosphereFramework, method: Method, obj: Any) {
+        if (stompServiceAnnotation.value.isEmpty()) {
+            throw IllegalArgumentException("StompService.value cannot be empty")
+        }
+
         val decoder = if (stompServiceAnnotation.decoder == DefaultTranscoder::class) {
             cachedDecoder(framework, MessageDecoder::class.java)
                 ?: DefaultTranscoder
@@ -57,33 +61,55 @@ internal class StompEndpointProcessor : Processor<Any> {
 
         val invokers = framework.atmosphereConfig.stompReceiveInvoker()
 
-        invokers.invokers[UriPattern(stompServiceAnnotation.value)] = methodInvocation
+        val uriPattern = UriPattern(stompServiceAnnotation.value)
+
+        val oldEndpoint = invokers.endpoints[uriPattern]
+        if (oldEndpoint != null) {
+            throw IllegalArgumentException("path ${stompServiceAnnotation.value} cannot be registered to $method, since it's already ${oldEndpoint.method}")
+        }
+
+        invokers.endpoints[uriPattern] = methodInvocation
     }
 
     private fun stompSubscribe(stompSubscriptionService: StompSubscriptionService, framework: AtmosphereFramework, method: Method, obj: Any) {
+        if (stompSubscriptionService.value.isEmpty()) {
+            throw IllegalArgumentException("StompSubscriptionService.value cannot be empty")
+        }
+
         val methodInvocation = InjectingMethodInvocation(
             method = method,
             bodyConverter = DefaultTranscoder,
             obj = obj
         )
 
+        if (method.returnType != Boolean::class.java) {
+            throw IllegalArgumentException("method $method has to return nonnull boolean value")
+        }
+
         val invokers = framework.atmosphereConfig.stompSubscribeInvoker()
 
-        invokers.invokers[UriPattern(stompSubscriptionService.value)] = methodInvocation
-    }
+        val uriPattern = UriPattern(stompSubscriptionService.value)
+        val oldEndpoint = invokers.endpoints[uriPattern]
+        if (oldEndpoint != null) {
+            throw IllegalArgumentException("path ${stompSubscriptionService.value} cannot be registered to $method, since it's already ${oldEndpoint.method}")
+        }
 
+        invokers.endpoints[uriPattern] = methodInvocation
+    }
 
     private fun stompHeartbeat(framework: AtmosphereFramework, method: Method, obj: Any) {
         val methodInvocation = HeartbeatMethodInvocation(
             method = method,
             obj = obj
         )
+        if (method.returnType != Void.TYPE) {
+            throw IllegalArgumentException("method $method has to return nonnull boolean value")
+        }
 
         val invokers = framework.atmosphereConfig.stompHeartbeatInvoker()
 
-        invokers.heartbeats.add(methodInvocation)
+        invokers.endpoints.add(methodInvocation)
     }
-
 
     private fun cachedDecoder(framework: AtmosphereFramework, decoder: Class<MessageDecoder<*>>): MessageDecoder<*>? {
         return if (messageDecoderCache.containsKey(decoder)) {
@@ -97,5 +123,9 @@ internal class StompEndpointProcessor : Processor<Any> {
             messageDecoderCache[decoder] = stomp
             stomp
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StompEndpointProcessor::class.java)
     }
 }

@@ -1,10 +1,9 @@
 package com.youcruit.atmosphere.stomp.protocol
 
-import java.io.IOException
-
-class StompProtocolException : IOException {
-    constructor() : super()
+/**
+ * This will close the connection after sending a message.
+ */
+open class StompErrorException : RuntimeException {
     constructor(message: String) : super(message)
     constructor(message: String, cause: Throwable) : super(message, cause)
-    constructor(cause: Throwable) : super(cause)
 }

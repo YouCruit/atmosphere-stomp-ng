@@ -8,18 +8,14 @@ import org.atmosphere.util.Utils
 import java.util.LinkedList
 
 internal class StompHeartBeatInterceptor : AtmosphereResourceHeartbeatEventListener, HeartbeatInterceptor() {
-    val heartbeats = LinkedList<HeartbeatMethodInvocation>()
+    val endpoints = LinkedList<HeartbeatMethodInvocation>()
 
     override fun onHeartbeat(event: AtmosphereResourceEvent) {
-        if (heartbeats.isNotEmpty() && !Utils.pollableTransport(event.resource.transport())) {
-            for (heartbeat in heartbeats) {
+        if (endpoints.isNotEmpty() && !Utils.pollableTransport(event.resource.transport())) {
+            for (heartbeat in endpoints) {
                 heartbeat.invoke(event)
             }
         }
-    }
-
-    companion object {
-        internal val STOMP_HEARTBEAT_DATA = byteArrayOf(0x0A)
     }
 }
 

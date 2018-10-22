@@ -62,12 +62,14 @@ dependencies {
     compile "org.atmosphere:atmosphere-runtime:${atmosphere_version}"
 
     compile "javax.servlet:javax.servlet-api:3.1.0"
+    compile "org.slf4j:slf4j-api:$slf4j_version"
+//    compile "org.slf4j:slf4j-api:1.7.24"
 
-    testCompile("org.apache.activemq:activemq-stomp:5.9.0") {
-    }
+//    testCompile("org.apache.activemq:activemq-stomp:5.9.0") {
+//    }
     testCompile "org.testng:testng:6.8.8"
     testCompile "org.mockito:mockito-all:1.8.5"
-    testCompile "org.slf4j:slf4j-simple:1.7.25"
+    testCompile "org.slf4j:slf4j-simple:$slf4j_version"
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
 }
