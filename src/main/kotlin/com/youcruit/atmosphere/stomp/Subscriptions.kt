@@ -13,7 +13,7 @@ private typealias Id = String
 
 class Subscriptions {
     private val idToDest = LinkedHashMap<Id, Destination>()
-
+    private val destToId = LinkedHashMap<Destination, Id>()
 
     fun getById(id: Id): Destination? {
         return idToDest[id]
@@ -25,5 +25,13 @@ class Subscriptions {
 
     fun removeById(id: Id) {
         idToDest.remove(id)
+    }
+
+    fun findAllByDestination(destination: String): List<Id> {
+        return destToId
+            .asSequence()
+            .filter { it.key.startsWith(destination) }
+            .map { it.value }
+            .toList()
     }
 }

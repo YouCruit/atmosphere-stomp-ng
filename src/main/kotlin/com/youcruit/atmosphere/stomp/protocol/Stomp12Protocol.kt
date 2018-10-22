@@ -25,13 +25,10 @@ object Stomp12Protocol : StompProtocol(1.2f) {
     }
 
     override fun eol(bytes: ByteArray): Boolean {
-            return when(bytes.size) {
-                1 -> bytes[0] == '\n'.toByte()
-                2 -> bytes[1] == '\r'.toByte() && bytes[0] == '\n'.toByte()
-                else -> false
-            }
+        return when (bytes.size) {
+            1 -> bytes[0] == '\n'.toByte()
+            2 -> bytes[1] == '\r'.toByte() && bytes[0] == '\n'.toByte()
+            else -> false
         }
+    }
 }
-
-
-

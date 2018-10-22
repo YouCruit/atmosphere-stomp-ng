@@ -9,7 +9,6 @@ interface MessageDecoder<out T> {
      * @return a new object of type T
      */
     fun decode(bytes: ByteArray, clazz: Class<in T>): T
-
 }
 
 object DefaultTranscoder : MessageDecoder<ByteArray> {

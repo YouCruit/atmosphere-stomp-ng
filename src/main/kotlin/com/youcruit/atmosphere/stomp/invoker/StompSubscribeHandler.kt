@@ -26,29 +26,32 @@ internal class StompSubscribeHandler(
 
         val substitutions = sessionFactory.getSession(atmosphereResource).subscriptions
 
-        if (substitutions.getById(id) != null) {
-            throw StompErrorException("Already subscribed with $id")
-        }
+        synchronized(substitutions) {
 
-        val destination = stompFrame.destination
-            ?: throw StompErrorException("SUBSCRIBE requires a destination")
-        val accepted = endpoints
-            .asSequence()
-            .filter { (key) -> key.match(destination) != null }
-            .any { (_, invoker) ->
-                invoker.invoke(atmosphereResource, stompFrame) as Boolean
+            if (substitutions.getById(id) != null) {
+                throw StompErrorException("Already subscribed with $id")
             }
 
-        if (!accepted) {
-            throw StompException("No subscription endpoint allowed subscription")
+            val destination = stompFrame.destination
+                ?: throw StompErrorException("SUBSCRIBE requires a destination")
+            val accepted = endpoints
+                .asSequence()
+                .filter { (key) -> key.match(destination) != null }
+                .any { (_, invoker) ->
+                    invoker.invoke(atmosphereResource, stompFrame) as Boolean
+                }
+
+            if (!accepted) {
+                throw StompException("No subscription endpoint allowed subscription")
+            }
+
+            val broadcaster: Broadcaster = framework.broadcasterFactory.lookup(destination, true)
+            val ar = atmosphereResource.atmosphereConfig.resourcesFactory().find(atmosphereResource.uuid())
+                ?: atmosphereResource
+            broadcaster.addAtmosphereResource(ar)
+
+            substitutions.addSubscription(id = id, destination = destination)
         }
-
-        val broadcaster: Broadcaster = framework.broadcasterFactory.lookup(destination, true)
-        val ar = atmosphereResource.atmosphereConfig.resourcesFactory().find(atmosphereResource.uuid())
-            ?: atmosphereResource
-        broadcaster.addAtmosphereResource(ar)
-
-        substitutions.addSubscription(id = id, destination = destination)
     }
 
     fun unsubscribe(atmosphereResource: AtmosphereResource, stompFrame: StompFrame) {
@@ -67,7 +70,9 @@ internal class StompSubscribeHandler(
             ?: atmosphereResource
         broadcaster.removeAtmosphereResource(ar)
 
-        subscriptions.removeById(id)
+        synchronized(subscriptions) {
+            subscriptions.removeById(id)
+        }
     }
 }
 

@@ -110,6 +110,11 @@ abstract class StompProtocol(
 
     fun encodeFrame(stompFrame: StompFrame): ByteArray {
         val baos = ByteArrayOutputStream()
+        writeFrame(baos, stompFrame)
+        return baos.toByteArray()
+    }
+
+    fun writeFrame(baos: ByteArrayOutputStream, stompFrame: StompFrame) {
         baos.writer(StandardCharsets.UTF_8).use {
             it.write(stompFrame.command.name)
             it.write('\n'.toInt())
@@ -126,7 +131,6 @@ abstract class StompProtocol(
         }
         baos.write(stompFrame.body)
         baos.write(0)
-        return baos.toByteArray()
     }
 
     protected open fun String.unescapeHeader(): String {
@@ -175,4 +179,3 @@ internal fun selectBestProtocol(clientProtocols: SortedSet<Float>): StompProtoco
     }
     throw StompErrorException("No protocol match between server ${AVAILABLE_STOMP_PROTOCOLS.map { it.version }} and client $clientProtocols")
 }
-

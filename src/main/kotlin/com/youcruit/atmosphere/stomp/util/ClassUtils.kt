@@ -2,7 +2,6 @@ package com.youcruit.atmosphere.stomp.util
 
 import java.lang.reflect.Method
 
-
 fun <T : Annotation> Method.recursiveAnnotationFinder(
     vararg annotationClasses: Class<out T>
 ): List<T> {
@@ -36,7 +35,6 @@ private fun <T : Annotation> recursiveAnnotationFinder(
         }
     }
 }
-
 
 private fun Class<*>.getMethodOrNull(
     methodName: String,

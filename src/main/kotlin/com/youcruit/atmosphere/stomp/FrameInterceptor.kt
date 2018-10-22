@@ -17,11 +17,14 @@ import com.youcruit.atmosphere.stomp.util.subscriptions
 import org.atmosphere.cpr.Action
 import org.atmosphere.cpr.AtmosphereConfig
 import org.atmosphere.cpr.AtmosphereFramework
+import org.atmosphere.cpr.AtmosphereHandler
 import org.atmosphere.cpr.AtmosphereInterceptorAdapter
 import org.atmosphere.cpr.AtmosphereResource
 import org.atmosphere.cpr.AtmosphereResourceImpl
 import org.atmosphere.cpr.AtmosphereResourceSessionFactory
+import org.atmosphere.cpr.BroadcastFilterLifecycle
 import org.atmosphere.cpr.HeartbeatAtmosphereResourceEvent
+import org.atmosphere.handler.AbstractReflectorAtmosphereHandler
 import org.atmosphere.interceptor.InvokationOrder
 import org.atmosphere.util.IOUtils
 import org.slf4j.LoggerFactory
@@ -45,16 +48,7 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
         val body = try {
             IOUtils.readEntirelyAsByte(r)
         } catch (e: IOException) {
-            r.write(
-                Stomp10Protocol.encodeFrame(
-                    StompFrame(
-                        command = ServerStompCommand.ERROR,
-                        headers = mapOf(),
-                        body = "Failed to read body"
-                    )
-                )
-            )
-            return Action.CANCELLED
+            return errorAndClose(Stomp10Protocol, StompErrorException("Failed to read body", e), null, r)
         }
         try {
 
@@ -80,6 +74,8 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
                                 Action.CANCELLED
                             }
                             ClientStompCommand.DISCONNECT,
+                            ClientStompCommand.ACK,
+                            ClientStompCommand.NACK,
                             ClientStompCommand.BEGIN,
                             ClientStompCommand.COMMIT,
                             ClientStompCommand.ABORT -> Action.CONTINUE // Noop
@@ -167,6 +163,11 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
         if (config.getInitParameter(STOMP_ERROR_FRAME_CONTAINS_STACKTRACE)?.toBoolean() == true) {
             stackInErrors = true
         }
+
+        framework.addAtmosphereHandler("/ws/stomp", framework.newClassInstance<AtmosphereHandler, AbstractReflectorAtmosphereHandler.Default>(AtmosphereHandler::class.java, AbstractReflectorAtmosphereHandler.Default::class.java))
+
+        val filter = framework.newClassInstance<BroadcastFilterLifecycle, StompBroadcastFilter>(BroadcastFilterLifecycle::class.java, StompBroadcastFilter::class.java)
+        framework.broadcasterFilters(filter)
     }
 
     override fun priority() = InvokationOrder.PRIORITY.AFTER_DEFAULT

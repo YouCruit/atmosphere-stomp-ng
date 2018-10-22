@@ -78,15 +78,16 @@ enum class ClientStompCommand : StompCommand {
     UNSUBSCRIBE,
     BEGIN,
     COMMIT,
-    ABORT
+    ABORT,
+
+    ACK,
+    NACK
 }
 
 enum class ServerStompCommand : StompCommand {
     CONNECTED,
     MESSAGE,
     RECEIPT,
-    ACK,
-    NACK,
 
     ERROR
 }

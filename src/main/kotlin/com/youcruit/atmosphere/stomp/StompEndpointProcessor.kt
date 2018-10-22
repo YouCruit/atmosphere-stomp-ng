@@ -25,7 +25,6 @@ internal class StompEndpointProcessor : Processor<Any> {
     override fun handle(framework: AtmosphereFramework, annotatedClass: Class<Any>) {
         val obj = framework.newClassInstance(Any::class.java, annotatedClass)
 
-
         for (method in annotatedClass.methods) {
             val stompServiceAnnotation = method.getAnnotation(StompService::class.java)
             if (stompServiceAnnotation != null) {
