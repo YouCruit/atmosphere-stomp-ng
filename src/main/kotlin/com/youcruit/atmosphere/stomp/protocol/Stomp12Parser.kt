@@ -2,9 +2,10 @@ package com.youcruit.atmosphere.stomp.protocol
 
 import java.io.IOException
 import java.io.InputStream
+import java.nio.charset.StandardCharsets
 
 object Stomp12Parser : StompParser() {
-    override fun InputStream.readLine(atMost: Int): String {
+    override fun InputStream.readUtf8Line(atMost: Int): String {
         val baos = EfficientByteArrayOutputStream()
         var wasCR = false
         for (i in 1..atMost) {
@@ -13,7 +14,7 @@ object Stomp12Parser : StompParser() {
                 throw StompProtocolException("Unexpected end of stream")
             }
             if (byte == 0x10) {
-                return baos.toString()
+                return baos.asString(StandardCharsets.UTF_8)
             }
             if (wasCR) {
                 baos.write(0x13)
@@ -27,6 +28,15 @@ object Stomp12Parser : StompParser() {
         }
         throw IOException("data too long")
     }
+
+    override val ByteArray.eol: Boolean
+        get() {
+            return when(size) {
+                1 -> this[0] == '\n'.toByte()
+                2 -> this[1] == '\r'.toByte() && this[0] == '\n'.toByte()
+                else -> false
+            }
+        }
 }
 
 

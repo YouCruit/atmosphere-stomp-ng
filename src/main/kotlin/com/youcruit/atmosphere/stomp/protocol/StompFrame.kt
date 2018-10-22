@@ -35,19 +35,26 @@ class StompFrame(
 interface StompCommand
 
 enum class ClientStompCommand : StompCommand {
+    NULL,
+    STOMP,
+    CONNECT,
+    DISCONNECT,
+
     SEND,
     SUBSCRIBE,
     UNSUBSCRIBE,
-    ACK,
-    NACK,
     BEGIN,
     COMMIT,
     ABORT,
-    DISCONNECT
+    RECEIPT
 }
 
 enum class ServerStompCommand : StompCommand {
+    CONNECTED,
     MESSAGE,
     RECEIPT,
+    ACK,
+    NACK,
+
     ERROR
 }

@@ -3,6 +3,7 @@ package com.youcruit.atmosphere.stomp.protocol
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
 abstract class StompParser {
@@ -19,9 +20,9 @@ abstract class StompParser {
     }
 
     open fun InputStream.readCommand() =
-        ClientStompCommand.valueOf(readLine(50))
+        ClientStompCommand.valueOf(readUtf8Line(50))
 
-    internal open fun InputStream.readLine(atMost: Int = 2048): String {
+    internal open fun InputStream.readUtf8Line(atMost: Int = 2048): String {
         val baos = EfficientByteArrayOutputStream()
         for (i in 1..atMost) {
             val byte = read()
@@ -29,7 +30,7 @@ abstract class StompParser {
                 throw StompProtocolException("Unexpected end of stream")
             }
             if (byte == 0x10) {
-                return baos.toString()
+                return baos.asString(StandardCharsets.UTF_8)
             }
             baos.write(byte)
         }
@@ -57,12 +58,12 @@ abstract class StompParser {
             generateSequence { read() }
                 .takeWhile { it != 0 }
                 .forEach { baos.write(it) }
-            return baos.toByteArray();
+            return baos.toByteArray()
         }
     }
 
     fun InputStream.readHeaderLine(): Pair<String, String>? {
-        val line = this.readLine()
+        val line = this.readUtf8Line()
         if (line == "") {
             return null
         }
@@ -80,18 +81,19 @@ abstract class StompParser {
             }
         return key to value
     }
+
+    open val ByteArray.eol: Boolean
+        get() {
+            return when(size) {
+                1 -> this[0] == '\n'.toByte()
+                else -> false
+            }
+        }
 }
 
 internal class EfficientByteArrayOutputStream : ByteArrayOutputStream() {
-    @Synchronized
-    override fun toString(): String {
-        return String(buf, 0, count, StandardCharsets.UTF_8)
+    fun asString(charset: Charset = StandardCharsets.UTF_8): String {
+        return String(buf, 0, count, charset)
     }
 }
 
-class StompProtocolException : IOException {
-    constructor() : super()
-    constructor(message: String) : super(message)
-    constructor(message: String, cause: Throwable) : super(message, cause)
-    constructor(cause: Throwable) : super(cause)
-}

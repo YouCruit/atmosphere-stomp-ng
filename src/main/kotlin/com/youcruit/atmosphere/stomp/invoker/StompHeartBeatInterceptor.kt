@@ -17,6 +17,10 @@ internal class StompHeartBeatInterceptor : AtmosphereResourceHeartbeatEventListe
             }
         }
     }
+
+    companion object {
+        internal val STOMP_HEARTBEAT_DATA = byteArrayOf(0x0A)
+    }
 }
 
 internal fun AtmosphereConfig.stompHeartbeatInvoker() =
