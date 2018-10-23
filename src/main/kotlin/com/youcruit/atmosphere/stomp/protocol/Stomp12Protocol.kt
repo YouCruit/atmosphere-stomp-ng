@@ -11,24 +11,28 @@ object Stomp12Protocol : StompProtocol(1.2f) {
             if (byte == -1) {
                 throw StompErrorException("Unexpected end of stream")
             }
-            if (byte == 0x10) {
+            if (byte.toByte() == newline) {
                 return baos.asString(StandardCharsets.UTF_8)
             }
-            if (byte == 0x13) {
-                if (read() != 0x10) {
+            if (byte.toByte() == cr) {
+                if (read().toByte() != newline) {
                     throw StompErrorException("CR must be escaped or be just before LF")
                 }
                 return baos.asString(StandardCharsets.UTF_8)
             }
+            baos.write(byte)
         }
         throw StompErrorException("data too long")
     }
 
     override fun eol(bytes: ByteArray): Boolean {
         return when (bytes.size) {
-            1 -> bytes[0] == '\n'.toByte()
-            2 -> bytes[1] == '\r'.toByte() && bytes[0] == '\n'.toByte()
+            1 -> bytes[0] == newline
+            2 -> bytes[0] == cr && bytes[1] == newline
             else -> false
         }
     }
+
+    private const val newline = '\n'.toByte()
+    private const val cr = '\r'.toByte()
 }

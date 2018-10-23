@@ -37,7 +37,7 @@ abstract class StompProtocol(
             if (byte == -1) {
                 throw StompErrorException("Unexpected end of stream")
             }
-            if (byte == 0x10) {
+            if (byte == 0x0a) {
                 return baos.asString(StandardCharsets.UTF_8)
             }
             baos.write(byte)
@@ -64,7 +64,8 @@ abstract class StompProtocol(
             if (bytesRead != contentLength) {
                 throw StompErrorException("Stream closed prematurely")
             }
-            if (read() != -1) {
+            val nextByte = read()
+            if (nextByte != 0) {
                 throw StompErrorException("Body must be terminated by null character")
             }
             return bytes
@@ -123,7 +124,7 @@ abstract class StompProtocol(
             }
             stompFrame
                 .headers
-                .filter { (key) -> key == "content-length" }
+                .filter { (key) -> key != "content-length" }
                 .forEach { (key, value) ->
                     it.writeHeaderLine(key, value)
                 }
@@ -171,11 +172,11 @@ val AVAILABLE_STOMP_PROTOCOLS =
         Stomp12Protocol
     ).sortedByDescending { it.version }
 
-internal fun selectBestProtocol(clientProtocols: SortedSet<Float>): StompProtocol {
+internal fun selectBestProtocol(clientProtocols: SortedSet<Float>): StompProtocol? {
     for (stompParser in AVAILABLE_STOMP_PROTOCOLS) {
         if (clientProtocols.contains(stompParser.version)) {
             return stompParser
         }
     }
-    throw StompErrorException("No protocol match between server ${AVAILABLE_STOMP_PROTOCOLS.map { it.version }} and client $clientProtocols")
+    return null
 }

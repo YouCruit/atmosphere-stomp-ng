@@ -2,7 +2,6 @@ package com.youcruit.atmosphere.stomp.protocol
 
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
-import java.nio.charset.UnsupportedCharsetException
 
 internal class StompFrame(
     val command: StompCommand,
@@ -50,7 +49,7 @@ internal class StompFrame(
                 .substringBefore(';')
             return try {
                 Charset.forName(charset)
-            } catch (e: UnsupportedCharsetException) {
+            } catch (e: Exception) {
                 StandardCharsets.UTF_8
             }
         }
