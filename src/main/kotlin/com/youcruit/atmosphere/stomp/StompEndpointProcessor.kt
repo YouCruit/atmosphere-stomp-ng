@@ -14,7 +14,7 @@ import com.youcruit.atmosphere.stomp.invoker.stompSubscribeInvoker
 import org.atmosphere.annotation.Processor
 import org.atmosphere.config.AtmosphereAnnotation
 import org.atmosphere.cpr.AtmosphereFramework
-import org.atmosphere.util.uri.UriPattern
+import org.atmosphere.util.uri.UriTemplate
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Method
 
@@ -60,14 +60,14 @@ internal class StompEndpointProcessor : Processor<Any> {
 
         val invokers = framework.atmosphereConfig.stompReceiveInvoker()
 
-        val uriPattern = UriPattern(stompServiceAnnotation.value)
+        val uriTemplate = UriTemplate(stompServiceAnnotation.value)
 
-        val oldEndpoint = invokers.endpoints[uriPattern]
+        val oldEndpoint = invokers.endpoints[uriTemplate]
         if (oldEndpoint != null) {
             throw IllegalArgumentException("path ${stompServiceAnnotation.value} cannot be registered to $method, since it's already ${oldEndpoint.method}")
         }
 
-        invokers.endpoints[uriPattern] = methodInvocation
+        invokers.endpoints[uriTemplate] = methodInvocation
     }
 
     private fun stompSubscribe(stompSubscriptionService: StompSubscriptionService, framework: AtmosphereFramework, method: Method, obj: Any) {
@@ -87,13 +87,13 @@ internal class StompEndpointProcessor : Processor<Any> {
 
         val invokers = framework.atmosphereConfig.stompSubscribeInvoker()
 
-        val uriPattern = UriPattern(stompSubscriptionService.value)
-        val oldEndpoint = invokers.endpoints[uriPattern]
+        val template = UriTemplate(stompSubscriptionService.value)
+        val oldEndpoint = invokers.endpoints[template]
         if (oldEndpoint != null) {
             throw IllegalArgumentException("path ${stompSubscriptionService.value} cannot be registered to $method, since it's already ${oldEndpoint.method}")
         }
 
-        invokers.endpoints[uriPattern] = methodInvocation
+        invokers.endpoints[template] = methodInvocation
     }
 
     private fun stompHeartbeat(framework: AtmosphereFramework, method: Method, obj: Any) {

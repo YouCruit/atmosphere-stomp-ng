@@ -3,6 +3,7 @@ package com.youcruit.atmosphere.stomp.invoker
 import com.youcruit.atmosphere.stomp.api.MessageDecoder
 import com.youcruit.atmosphere.stomp.protocol.StompFrame
 import org.atmosphere.cpr.AtmosphereResource
+import org.atmosphere.util.uri.UriTemplate
 import java.lang.reflect.Method
 
 internal class InjectingMethodInvocation(

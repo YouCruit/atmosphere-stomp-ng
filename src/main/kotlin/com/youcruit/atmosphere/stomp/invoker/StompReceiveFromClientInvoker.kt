@@ -5,10 +5,10 @@ import com.youcruit.atmosphere.stomp.protocol.StompException
 import com.youcruit.atmosphere.stomp.protocol.StompFrame
 import org.atmosphere.cpr.AtmosphereConfig
 import org.atmosphere.cpr.AtmosphereResource
-import org.atmosphere.util.uri.UriPattern
+import org.atmosphere.util.uri.UriTemplate
 
 internal class StompReceiveFromClientInvoker {
-    val endpoints = LinkedHashMap<UriPattern, InjectingMethodInvocation>()
+    val endpoints = LinkedHashMap<UriTemplate, InjectingMethodInvocation>()
 
     fun invoke(atmosphereResource: AtmosphereResource, stompFrame: StompFrame) {
         val destination = stompFrame.destination
@@ -16,9 +16,9 @@ internal class StompReceiveFromClientInvoker {
         var sent = false
         endpoints
             .asSequence()
-            .filter { (key) -> key.match(destination) != null }
-            .forEach { (_, invoker) ->
-                invoker.invoke(atmosphereResource, stompFrame)
+            .filter { (key) -> key.pattern.match(destination) != null }
+            .forEach { (template, invoker) ->
+                invoker.invoke(atmosphereResource, stompFrame, template)
                 sent = true
             }
         if (!sent) {

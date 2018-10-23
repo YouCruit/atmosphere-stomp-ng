@@ -8,12 +8,14 @@ import org.atmosphere.cpr.AtmosphereConfig
 import org.atmosphere.cpr.AtmosphereFramework
 import org.atmosphere.cpr.AtmosphereResource
 import org.atmosphere.cpr.Broadcaster
-import org.atmosphere.util.uri.UriPattern
+import org.atmosphere.util.uri.UriTemplate
+
+private typealias Destination = String
 
 internal class StompSubscribeHandler(
     private val framework: AtmosphereFramework
 ) {
-    val endpoints = LinkedHashMap<UriPattern, InjectingMethodInvocation>()
+    val endpoints = LinkedHashMap<UriTemplate, InjectingMethodInvocation>()
 
     private val sessionFactory
         get() = framework.sessionFactory()
@@ -36,9 +38,9 @@ internal class StompSubscribeHandler(
                 ?: throw StompErrorException("SUBSCRIBE requires a destination")
             val accepted = endpoints
                 .asSequence()
-                .filter { (key) -> key.match(destination) != null }
-                .any { (_, invoker) ->
-                    invoker.invoke(atmosphereResource, stompFrame) as Boolean
+                .filter { (key) -> key.pattern.match(destination) != null }
+                .any { (template, invoker) ->
+                    invoker.invoke(atmosphereResource, stompFrame, template) as Boolean
                 }
 
             if (!accepted) {
