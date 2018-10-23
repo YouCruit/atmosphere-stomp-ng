@@ -31,7 +31,6 @@ internal class Heartbeater(
         heartbeater.cancel(true)
     }
 
-
     companion object {
         @Volatile
         private var heartbeatThreadsStarted = 0

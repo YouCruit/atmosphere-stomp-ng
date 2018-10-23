@@ -273,4 +273,3 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
         private val logger = LoggerFactory.getLogger(FrameInterceptor::class.java)!!
     }
 }
-

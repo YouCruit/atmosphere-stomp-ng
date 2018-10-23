@@ -10,8 +10,6 @@ import org.atmosphere.cpr.AtmosphereResource
 import org.atmosphere.cpr.Broadcaster
 import org.atmosphere.util.uri.UriTemplate
 
-private typealias Destination = String
-
 internal class StompSubscribeHandler(
     private val framework: AtmosphereFramework
 ) {
