@@ -4,6 +4,9 @@ import com.youcruit.atmosphere.stomp.invoker.StompHeartBeatInterceptor
 import com.youcruit.atmosphere.stomp.invoker.StompReceiveFromClientInvoker
 import com.youcruit.atmosphere.stomp.invoker.StompSubscribeHandler
 import com.youcruit.atmosphere.stomp.invoker.stompHeartbeatInvoker
+import com.youcruit.atmosphere.stomp.invoker.stompReceiveInvoker
+import com.youcruit.atmosphere.stomp.invoker.stompSubscribeInvoker
+import com.youcruit.atmosphere.stomp.protocol.AVAILABLE_STOMP_PROTOCOLS
 import com.youcruit.atmosphere.stomp.protocol.ClientStompCommand
 import com.youcruit.atmosphere.stomp.protocol.ServerStompCommand
 import com.youcruit.atmosphere.stomp.protocol.Stomp10Protocol
@@ -12,15 +15,18 @@ import com.youcruit.atmosphere.stomp.protocol.StompException
 import com.youcruit.atmosphere.stomp.protocol.StompFrame
 import com.youcruit.atmosphere.stomp.protocol.StompProtocol
 import com.youcruit.atmosphere.stomp.protocol.selectBestProtocol
+import com.youcruit.atmosphere.stomp.util.PROTOCOL_VERSION
 import com.youcruit.atmosphere.stomp.util.protocol
 import com.youcruit.atmosphere.stomp.util.subscriptions
 import org.atmosphere.cpr.Action
+import org.atmosphere.cpr.ApplicationConfig.CLIENT_HEARTBEAT_INTERVAL_IN_SECONDS
 import org.atmosphere.cpr.AtmosphereConfig
 import org.atmosphere.cpr.AtmosphereFramework
 import org.atmosphere.cpr.AtmosphereHandler
 import org.atmosphere.cpr.AtmosphereInterceptorAdapter
 import org.atmosphere.cpr.AtmosphereResource
 import org.atmosphere.cpr.AtmosphereResourceImpl
+import org.atmosphere.cpr.AtmosphereResourceSession
 import org.atmosphere.cpr.AtmosphereResourceSessionFactory
 import org.atmosphere.cpr.BroadcastFilterLifecycle
 import org.atmosphere.cpr.HeartbeatAtmosphereResourceEvent
@@ -32,6 +38,7 @@ import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.time.Duration
 import java.util.SortedSet
 
 class FrameInterceptor : AtmosphereInterceptorAdapter() {
@@ -68,10 +75,13 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
                         val action = when (frame.command as ClientStompCommand) {
                             ClientStompCommand.CONNECT,
                             ClientStompCommand.STOMP -> {
-                                val clientVersions = parseVersion(frame.headers["accept-version"])
-                                resourceSession.protocol = selectBestProtocol(clientVersions)
-                                resourceSession.subscriptions = Subscriptions()
-                                Action.CANCELLED
+                                if (connect(resourceSession, frame, r)) {
+                                    // all good!
+                                    Action.CANCELLED
+                                } else {
+                                    // Error
+                                    return Action.DESTROYED
+                                }
                             }
                             ClientStompCommand.DISCONNECT,
                             ClientStompCommand.ACK,
@@ -113,6 +123,84 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
         return Action.CANCELLED
     }
 
+    private fun connect(resourceSession: AtmosphereResourceSession, frame: StompFrame, r: AtmosphereResource): Boolean {
+        if (resourceSession.getAttribute(PROTOCOL_VERSION) != null) {
+            throw StompErrorException("Already connected")
+        }
+
+        val clientVersions = parseVersion(frame.headers["accept-version"])
+            ?: sortedSetOf(1.0f)
+        val selectBestProtocol = selectBestProtocol(clientVersions)
+        if (selectBestProtocol == null) {
+            r.write(
+                Stomp10Protocol.encodeFrame(
+                    StompFrame(
+                        command = ServerStompCommand.ERROR,
+                        headers = mapOf(
+                            "version" to (AVAILABLE_STOMP_PROTOCOLS.joinToString(separator = ",") { it.version.toString() }),
+                            "content-type" to "text/plain"
+                        ),
+                        body = "Supported protocol versions are ${AVAILABLE_STOMP_PROTOCOLS.joinToString(separator = " ") { it.version.toString() }}"
+                    )
+                )
+            )
+            try {
+                r.response.flushBuffer()
+            } catch (ignored: Exception) {
+            }
+            r.close()
+            return false
+        }
+        resourceSession.protocol = selectBestProtocol
+
+        if (resourceSession.protocol.version >= 1.2f) {
+            // Ignoring host for now
+            frame.headers["host"]
+                ?: throw StompErrorException("Host not set. It's ignored, but required according to the spec.")
+        }
+
+        resourceSession.subscriptions = Subscriptions()
+        val headers = LinkedHashMap(mapOf(
+            "version" to resourceSession.protocol.version.toString(),
+            "session" to r.uuid(),
+            "server" to "atmosphere-stomp-ng"
+        ))
+        if (resourceSession.protocol.version == 1.2f) {
+            val serverHeartbeat = framework.atmosphereConfig.getInitParameter(CLIENT_HEARTBEAT_INTERVAL_IN_SECONDS, 0)
+
+            val heartbeat = selectHeartbeat(frame.headers["heart-beat"], IntRange(0, serverHeartbeat))
+            // Do something with heartbeat
+            if (!heartbeat.isZero) {
+                r.addEventListener(Heartbeater(heartbeat, r))
+            }
+
+            headers["heart-beat"] = "0,$serverHeartbeat"
+        }
+        r.write(
+            resourceSession.protocol.encodeFrame(
+                StompFrame(
+                    command = ServerStompCommand.CONNECTED,
+                    headers = headers,
+                    body = byteArrayOf()
+                )
+            )
+        )
+        return true
+    }
+
+    private fun selectHeartbeat(heartBeatHeader: String?, @Suppress("UNUSED_PARAMETER") serverHeartbeat: IntRange): Duration {
+        val clientInterval = heartBeatHeader
+            ?.let {
+                HEART_BEAT_REGEX.split(it, 2)
+            }?.let { (from, to) ->
+                IntRange(from.toInt(), to.toInt())
+            } ?: IntRange(0, Int.MAX_VALUE)
+        if (clientInterval.first < 0 || clientInterval.last < 0) {
+            throw StompErrorException("heart-beat must be positive")
+        }
+        return Duration.ofMillis(clientInterval.last.toLong())
+    }
+
     private fun errorAndClose(stompProtocol: StompProtocol, e: StompErrorException, receipt: String?, r: AtmosphereResource): Action {
         logger.error("STOMP ERROR: {} ", e.message, e)
 
@@ -147,18 +235,20 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
         return Action.DESTROYED
     }
 
-    private fun parseVersion(versionHeader: String?): SortedSet<Float> {
-        return (versionHeader ?: "")
-            .trim()
-            .splitToSequence(",")
-            .map { it.toFloatOrNull() }
-            .filterNotNull()
-            .toSortedSet()
+    private fun parseVersion(versionHeader: String?): SortedSet<Float>? {
+        return versionHeader
+            ?.trim()
+            ?.splitToSequence(",")
+            ?.map { it.toFloatOrNull() }
+            ?.filterNotNull()
+            ?.toSortedSet()
     }
 
     override fun configure(config: AtmosphereConfig) {
         framework = config.framework()
         heartBeatInterceptor = framework.atmosphereConfig.stompHeartbeatInvoker()
+        stompSubscribeHandler = framework.atmosphereConfig.stompSubscribeInvoker()
+        stompReceiveFromClientInvoker = framework.atmosphereConfig.stompReceiveInvoker()
         sessionFactory = framework.atmosphereConfig.sessionFactory()
         if (config.getInitParameter(STOMP_ERROR_FRAME_CONTAINS_STACKTRACE)?.toBoolean() == true) {
             stackInErrors = true
@@ -174,7 +264,11 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
 
     companion object {
         const val STOMP_ERROR_FRAME_CONTAINS_STACKTRACE = "com.youcruit.atmosphere.stomp.error.contains.stack"
+        const val STOMP_PATH = "com.youcruit.atmosphere.stomp.path"
+        const val STOMP_REQUEST_FRAME = "com.youcruit.atmosphere.stomp.request.frame"
+        private val HEART_BEAT_REGEX = Regex("([0-9]+),([0-9]+)")
 
         private val logger = LoggerFactory.getLogger(FrameInterceptor::class.java)!!
     }
 }
+
