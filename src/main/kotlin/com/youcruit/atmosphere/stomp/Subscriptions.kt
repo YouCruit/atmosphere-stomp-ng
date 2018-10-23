@@ -6,14 +6,13 @@ package com.youcruit.atmosphere.stomp
  * "/foo/965544df-4191-446d-b6c1-a2530af97f82/"
  * and NEVER
  * "/foo/{barId}/"
- */
+*/
 private typealias Destination = String
 
 private typealias Id = String
 
 class Subscriptions {
     private val idToDest = LinkedHashMap<Id, Destination>()
-    private val destToId = LinkedHashMap<Destination, Id>()
 
     fun getById(id: Id): Destination? {
         return idToDest[id]
@@ -28,10 +27,10 @@ class Subscriptions {
     }
 
     fun findAllByDestination(destination: String): List<Id> {
-        return destToId
+        return idToDest
             .asSequence()
-            .filter { it.key.startsWith(destination) }
-            .map { it.value }
+            .filter { (_, dest) -> dest.startsWith(destination) }
+            .map { it.key }
             .toList()
     }
 }
