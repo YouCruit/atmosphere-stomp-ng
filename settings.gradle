@@ -1,2 +1,3 @@
-rootProject.name = 'com.youcruit'
+//rootProject.name = 'com.youcruit'
+rootProject.name = "STOMP protocol implementation for Atmosphere"
 

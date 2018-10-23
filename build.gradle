@@ -6,6 +6,7 @@ buildscript {
         classpath "gradle.plugin.org.jmailen.gradle:kotlinter-gradle:1.15.1"
         classpath "org.ajoberstar:gradle-git:1.7.2"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:${dokka_version}"
         classpath "com.github.ben-manes:gradle-versions-plugin:0.20.0"
         classpath "org.eclipse.jgit:org.eclipse.jgit:4.4.1.201607150455-r"
         classpath "net.researchgate:gradle-release:2.6.0"
@@ -24,6 +25,8 @@ apply plugin: 'kotlin'
 apply plugin: 'nebula.lint'
 apply plugin: 'com.github.ben-manes.versions'
 apply plugin: 'idea'
+apply plugin: 'maven-publish'
+apply plugin: 'org.jetbrains.dokka'
 
 apply from: "${project.rootDir}/release.gradle"
 apply from: "${project.rootDir}/kotlin.gradle"
@@ -35,6 +38,11 @@ repositories {
 }
 
 group 'com.youcruit'
+description = """
+                Differs from the original implementation in that it supports wildcards, supports rejecting SUBSCRIBEs and
+                SENDs. The latter two are supported through hitting endpoints which may deny or pass the message through 
+            """.stripMargin()
+
 
 idea {
     module {
@@ -44,6 +52,39 @@ idea {
         downloadSources = true
     }
 }
+
+//task sourceJar(type: Jar) {
+//    classifier 'sources'
+//    from sourceSets.main.allJava
+//    from sourceSets.main.allKotlin
+//}
+dokka {
+    outputFormat = 'html'
+    outputDirectory = "$buildDir/javadoc"
+}
+
+task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaTask) {
+    outputFormat = 'javadoc'
+    outputDirectory = javadoc.destinationDir
+    inputs.dir 'src/main/kotlin'
+}
+
+task javadocJar(type: Jar, dependsOn: dokkaJavadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'atmosphere-stomp-ng'
+            from components.java
+            artifact tasks.sourceJar
+            artifact tasks.javadocJar
+        }
+    }
+}
+
 
 dependencyUpdates {
     revision = 'release'
@@ -63,10 +104,7 @@ dependencies {
 
     compile "javax.servlet:javax.servlet-api:3.1.0"
     compile "org.slf4j:slf4j-api:$slf4j_version"
-//    compile "org.slf4j:slf4j-api:1.7.24"
 
-//    testCompile("org.apache.activemq:activemq-stomp:5.9.0") {
-//    }
     testCompile "org.testng:testng:6.8.8"
     testCompile "org.mockito:mockito-all:1.8.5"
     testCompile "org.slf4j:slf4j-simple:$slf4j_version"
