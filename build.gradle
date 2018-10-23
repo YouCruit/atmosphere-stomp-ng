@@ -26,10 +26,10 @@ apply plugin: 'nebula.lint'
 apply plugin: 'com.github.ben-manes.versions'
 apply plugin: 'idea'
 apply plugin: 'maven-publish'
-apply plugin: 'org.jetbrains.dokka'
 
 apply from: "${project.rootDir}/release.gradle"
 apply from: "${project.rootDir}/kotlin.gradle"
+
 
 repositories {
     mavenLocal()
@@ -53,27 +53,6 @@ idea {
     }
 }
 
-//task sourceJar(type: Jar) {
-//    classifier 'sources'
-//    from sourceSets.main.allJava
-//    from sourceSets.main.allKotlin
-//}
-dokka {
-    outputFormat = 'html'
-    outputDirectory = "$buildDir/javadoc"
-}
-
-task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaTask) {
-    outputFormat = 'javadoc'
-    outputDirectory = javadoc.destinationDir
-    inputs.dir 'src/main/kotlin'
-}
-
-task javadocJar(type: Jar, dependsOn: dokkaJavadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -84,7 +63,6 @@ publishing {
         }
     }
 }
-
 
 dependencyUpdates {
     revision = 'release'

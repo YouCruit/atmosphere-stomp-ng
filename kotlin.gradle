@@ -1,8 +1,10 @@
 apply plugin: 'kotlin'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'org.jetbrains.dokka'
 apply plugin: 'java'
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
 apply plugin: "org.jmailen.kotlinter"
+
 
 def CI = Boolean.getBoolean("youcruit.ci")
 
@@ -65,8 +67,26 @@ ktlint {
     ignoreFailures = false
 }
 
+dokka {
+    outputFormat = 'html'
+    reportUndocumented = false
+    outputDirectory = "$buildDir/javadoc"
+}
+
+//task dokkaJavadoc(type: org.jetbrains.dokka.gradle.DokkaTask) {
+//    outputFormat = 'javadoc'
+//    outputDirectory = javadoc.destinationDir
+//    inputs.dir 'src/main/kotlin'
+//}
+
+task javadocJar(type: Jar) {
+//    task.dependsOn dokkaJavadoc
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
 task sourceJar(type: Jar) {
-    from sourceSets.main.allJava
+    from sourceSets.main.allSource
     classifier = 'source'
 }
 assemble.dependsOn sourceJar
