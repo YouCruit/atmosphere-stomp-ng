@@ -11,7 +11,7 @@ import java.util.SortedSet
 abstract class StompProtocol(
     open val version: Float
 ) {
-    fun parse(input: InputStream): StompFrame {
+    internal fun parse(input: InputStream): StompFrame {
         try {
             val command = input.readCommand()
             val headers = input.readHeaderLines()
@@ -108,13 +108,13 @@ abstract class StompProtocol(
         }
     }
 
-    fun encodeFrame(stompFrame: StompFrame): ByteArray {
+    internal fun encodeFrame(stompFrame: StompFrame): ByteArray {
         val baos = ByteArrayOutputStream()
         writeFrame(baos, stompFrame)
         return baos.toByteArray()
     }
 
-    fun writeFrame(baos: ByteArrayOutputStream, stompFrame: StompFrame) {
+    internal fun writeFrame(baos: ByteArrayOutputStream, stompFrame: StompFrame) {
         baos.writer(StandardCharsets.UTF_8).use {
             it.write(stompFrame.command.name)
             it.write('\n'.toInt())

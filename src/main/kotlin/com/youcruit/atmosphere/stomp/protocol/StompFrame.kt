@@ -4,7 +4,7 @@ import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.nio.charset.UnsupportedCharsetException
 
-class StompFrame(
+internal class StompFrame(
     val command: StompCommand,
     val headers: Map<String, String>,
     val body: ByteArray
