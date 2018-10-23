@@ -254,7 +254,9 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
             stackInErrors = true
         }
 
-        framework.addAtmosphereHandler("/ws/stomp", framework.newClassInstance<AtmosphereHandler, AbstractReflectorAtmosphereHandler.Default>(AtmosphereHandler::class.java, AbstractReflectorAtmosphereHandler.Default::class.java))
+        val stompPath = config.getInitParameter(STOMP_PATH, "/ws/stomp")
+
+        framework.addAtmosphereHandler(stompPath, framework.newClassInstance<AtmosphereHandler, AbstractReflectorAtmosphereHandler.Default>(AtmosphereHandler::class.java, AbstractReflectorAtmosphereHandler.Default::class.java))
 
         val filter = framework.newClassInstance<BroadcastFilterLifecycle, StompBroadcastFilter>(BroadcastFilterLifecycle::class.java, StompBroadcastFilter::class.java)
         framework.broadcasterFilters(filter)
