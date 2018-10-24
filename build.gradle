@@ -10,6 +10,7 @@ buildscript {
         classpath "com.github.ben-manes:gradle-versions-plugin:0.20.0"
         classpath "org.eclipse.jgit:org.eclipse.jgit:4.4.1.201607150455-r"
         classpath "net.researchgate:gradle-release:2.6.0"
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4"
     }
     repositories {
         mavenLocal()
@@ -24,7 +25,6 @@ apply plugin: 'base'
 apply plugin: 'nebula.lint'
 apply plugin: 'com.github.ben-manes.versions'
 apply plugin: 'idea'
-apply plugin: 'maven-publish'
 
 apply from: "${project.rootDir}/release.gradle"
 apply from: "${project.rootDir}/kotlin.gradle"
@@ -49,17 +49,6 @@ idea {
         outputDir = file('build/idea-out')
         testOutputDir = file('build/idea-testout')
         downloadSources = true
-    }
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifactId = 'atmosphere-stomp-ng'
-            from components.java
-            artifact tasks.sourceJar
-            artifact tasks.javadocJar
-        }
     }
 }
 
