@@ -191,7 +191,7 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
     private fun selectHeartbeat(heartBeatHeader: String?, @Suppress("UNUSED_PARAMETER") serverHeartbeat: IntRange): Duration {
         val clientInterval = heartBeatHeader
             ?.let {
-                HEART_BEAT_REGEX.matchEntire(it, 2)
+                HEART_BEAT_REGEX.matchEntire(it)
             }?.groupValues
             ?.let { (from, to) ->
                 IntRange(from.toInt(), to.toInt())
