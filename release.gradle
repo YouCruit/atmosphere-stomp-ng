@@ -5,7 +5,7 @@ release {
     revertOnFail = false
 
     // $version needs to be quoted so it is resolved at tag time
-    tagTemplate = "atmmosphere-ng-\$version-${new Date().format('yyyy-MM-dd-HHmm')}"
+    tagTemplate = "atmosphere-ng-\$version-${new Date().format('yyyy-MM-dd-HHmm')}"
 
 
     git {
