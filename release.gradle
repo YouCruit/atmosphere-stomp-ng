@@ -42,3 +42,4 @@ release {
 
 tasks.release.group = 'Release'
 afterReleaseBuild.dependsOn bintrayUpload
+afterReleaseBuild.dependsOn bintrayPublish
