@@ -10,11 +10,9 @@ import com.youcruit.atmosphere.stomp.api.Destination
  * and will not be broadcasted to all other connections that subscribe to this
  * destination.
  *
- *
- *
  * This is useful for e.g. creating your own error handling because stomp lacks it for
  * SUBSCRIBE and SEND when guessing what and if the frame caused a problem.
-  */
+ */
 @Suppress("unused")
 class StompWithReplyException(
     message: String,

@@ -43,10 +43,8 @@ abstract class StompFrame(
                 StandardCharsets.UTF_8
             }
         }
-
     }
 }
-
 
 interface StompCommand {
     val name: String
