@@ -24,19 +24,23 @@ internal class StompEndpointProcessor : Processor<Any> {
 
     override fun handle(framework: AtmosphereFramework, annotatedClass: Class<Any>) {
         val obj = framework.newClassInstance(Any::class.java, annotatedClass)
-
-        for (method in annotatedClass.methods) {
-            val stompServiceAnnotation = method.getAnnotation(StompService::class.java)
-            if (stompServiceAnnotation != null) {
-                stompService(stompServiceAnnotation, framework, method, obj)
+        try {
+            for (method in annotatedClass.methods) {
+                val stompServiceAnnotation = method.getAnnotation(StompService::class.java)
+                if (stompServiceAnnotation != null) {
+                    stompService(stompServiceAnnotation, framework, method, obj)
+                }
+                val stompSubscriptionService = method.getAnnotation(StompSubscriptionService::class.java)
+                if (stompSubscriptionService != null) {
+                    stompSubscribe(stompSubscriptionService, framework, method, obj)
+                }
+                if (method.isAnnotationPresent(StompHeartbeat::class.java)) {
+                    stompHeartbeat(framework, method, obj)
+                }
             }
-            val stompSubscriptionService = method.getAnnotation(StompSubscriptionService::class.java)
-            if (stompSubscriptionService != null) {
-                stompSubscribe(stompSubscriptionService, framework, method, obj)
-            }
-            if (method.isAnnotationPresent(StompHeartbeat::class.java)) {
-                stompHeartbeat(framework, method, obj)
-            }
+        } catch (t: Throwable) {
+            logger.error("Caught an error while processing endpoint: ${annotatedClass.name}", t)
+            throw t
         }
     }
 
