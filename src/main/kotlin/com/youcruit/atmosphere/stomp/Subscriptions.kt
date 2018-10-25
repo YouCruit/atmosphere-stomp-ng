@@ -8,6 +8,8 @@ import com.youcruit.atmosphere.stomp.protocol.StompProtocol
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
+private typealias Id = String
+
 /**
  * Destination is always a "resolved" String, i.e. never a template.
  * Possible value is
@@ -15,8 +17,6 @@ import java.util.UUID
  * and NEVER
  * "/foo/{barId}/"
  */
-private typealias Id = String
-
 internal class Subscriptions {
     private val idToDest = LinkedHashMap<Id, Destination>()
 
