@@ -1,5 +1,6 @@
 package com.youcruit.atmosphere.stomp.protocol
 
+import com.youcruit.atmosphere.stomp.api.exceptions.StompErrorException
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 

@@ -1,4 +1,4 @@
-package com.youcruit.atmosphere.stomp.protocol
+package com.youcruit.atmosphere.stomp.api.exceptions
 
 /**
  * This will close the connection after sending a message.

@@ -3,11 +3,11 @@ package com.youcruit.atmosphere.stomp.protocol
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
-internal class StompFrame(
-    val command: StompCommand,
+abstract class StompFrame(
     val headers: Map<String, String>,
     val body: ByteArray
 ) {
+    abstract val command: StompCommand
 
     val id: String?
         get() = headers["id"]
@@ -30,18 +30,8 @@ internal class StompFrame(
     val charset: Charset
         get() = getCharset(headers)
 
-    constructor(
-        command: StompCommand,
-        headers: Map<String, String>,
-        body: String
-    ) : this(
-        command = command,
-        headers = headers,
-        body = body.toByteArray(getCharset(headers))
-    )
-
     companion object {
-        private fun getCharset(headers: Map<String, String>): Charset {
+        internal fun getCharset(headers: Map<String, String>): Charset {
             val contentType = headers["content-type"]
                 ?: return StandardCharsets.UTF_8
             val charset = contentType
@@ -54,39 +44,10 @@ internal class StompFrame(
             }
         }
 
-        fun receiptOf(frame: StompFrame) =
-            StompFrame(
-                command = ServerStompCommand.RECEIPT,
-                headers = mapOf("receipt-id" to frame.receipt!!),
-                body = byteArrayOf()
-            )
     }
 }
 
+
 interface StompCommand {
     val name: String
-}
-
-enum class ClientStompCommand : StompCommand {
-    STOMP,
-    CONNECT,
-    DISCONNECT,
-
-    SEND,
-    SUBSCRIBE,
-    UNSUBSCRIBE,
-    BEGIN,
-    COMMIT,
-    ABORT,
-
-    ACK,
-    NACK
-}
-
-enum class ServerStompCommand : StompCommand {
-    CONNECTED,
-    MESSAGE,
-    RECEIPT,
-
-    ERROR
 }

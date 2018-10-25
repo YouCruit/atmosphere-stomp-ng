@@ -4,7 +4,7 @@ import com.youcruit.atmosphere.stomp.FrameInterceptor
 import com.youcruit.atmosphere.stomp.api.MessageDecoder
 import com.youcruit.atmosphere.stomp.api.StompRequestFrame
 import com.youcruit.atmosphere.stomp.api.StompRequestFrameImpl
-import com.youcruit.atmosphere.stomp.protocol.StompFrame
+import com.youcruit.atmosphere.stomp.protocol.StompFrameFromClient
 import com.youcruit.atmosphere.stomp.util.FixedUriTemplate
 import org.atmosphere.cpr.AtmosphereResource
 import java.lang.reflect.InvocationTargetException
@@ -15,7 +15,7 @@ internal class InjectingMethodInvocation(
         private val obj: Any,
         private val bodyConverter: MessageDecoder<*>
 ) {
-    private fun getParameters(atmosphereResource: AtmosphereResource, stompFrame: StompFrame, stompRequestFrame: StompRequestFrame): Array<Any?> {
+    private fun getParameters(atmosphereResource: AtmosphereResource, stompFrame: StompFrameFromClient, stompRequestFrame: StompRequestFrame): Array<Any?> {
         return method
                 .parameterTypes
                 .map { it ->
@@ -28,7 +28,7 @@ internal class InjectingMethodInvocation(
                 }.toTypedArray()
     }
 
-    fun invoke(atmosphereResource: AtmosphereResource, stompFrame: StompFrame, template: FixedUriTemplate): Any? {
+    fun invoke(atmosphereResource: AtmosphereResource, stompFrame: StompFrameFromClient, template: FixedUriTemplate): Any? {
         val stompRequestFrame = StompRequestFrameImpl(stompFrame, template)
         atmosphereResource.request.setAttribute(FrameInterceptor.STOMP_REQUEST_FRAME, stompRequestFrame)
 

@@ -1,6 +1,6 @@
 package com.youcruit.atmosphere.stomp.api
 
-import com.youcruit.atmosphere.stomp.protocol.StompFrame
+import com.youcruit.atmosphere.stomp.protocol.StompFrameFromClient
 import com.youcruit.atmosphere.stomp.util.FixedUriTemplate
 
 interface StompRequestFrame {
@@ -11,7 +11,9 @@ interface StompRequestFrame {
 }
 
 internal class StompRequestFrameImpl(
-    internal val stompFrame: StompFrame,
+    @Suppress("CanBeParameter")
+    // For debugging
+    internal val stompFrame: StompFrameFromClient,
     private val template: FixedUriTemplate
 ) : StompRequestFrame {
     override val headers: Map<String, String> = stompFrame.headers

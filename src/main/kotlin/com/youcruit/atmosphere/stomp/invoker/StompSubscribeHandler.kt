@@ -1,8 +1,8 @@
 package com.youcruit.atmosphere.stomp.invoker
 
-import com.youcruit.atmosphere.stomp.protocol.StompErrorException
-import com.youcruit.atmosphere.stomp.protocol.StompException
-import com.youcruit.atmosphere.stomp.protocol.StompFrame
+import com.youcruit.atmosphere.stomp.api.exceptions.StompErrorException
+import com.youcruit.atmosphere.stomp.api.exceptions.StompException
+import com.youcruit.atmosphere.stomp.protocol.StompFrameFromClient
 import com.youcruit.atmosphere.stomp.util.FixedUriTemplate
 import com.youcruit.atmosphere.stomp.util.subscriptions
 import org.atmosphere.cpr.AtmosphereConfig
@@ -18,7 +18,7 @@ internal class StompSubscribeHandler(
     private val sessionFactory
         get() = framework.sessionFactory()
 
-    fun subscribe(atmosphereResource: AtmosphereResource, stompFrame: StompFrame) {
+    fun subscribe(atmosphereResource: AtmosphereResource, stompFrame: StompFrameFromClient) {
         val id = stompFrame.id
         if (id?.isBlank() != false) {
             throw StompErrorException("SUBSCRIBE must have an id")
@@ -54,7 +54,7 @@ internal class StompSubscribeHandler(
         }
     }
 
-    fun unsubscribe(atmosphereResource: AtmosphereResource, stompFrame: StompFrame) {
+    fun unsubscribe(atmosphereResource: AtmosphereResource, stompFrame: StompFrameFromClient) {
         val id = stompFrame.headers["id"]
         if (id?.isBlank() != false) {
             throw StompErrorException("UNSUBSCRIBE must have an id")

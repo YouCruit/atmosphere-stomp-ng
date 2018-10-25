@@ -1,5 +1,6 @@
 package com.youcruit.atmosphere.stomp.protocol
 
+import com.youcruit.atmosphere.stomp.api.exceptions.StompErrorException
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -11,13 +12,13 @@ import java.util.SortedSet
 abstract class StompProtocol(
     open val version: Float
 ) {
-    internal fun parse(input: InputStream): StompFrame {
+    internal fun parse(input: InputStream): StompFrameFromClient {
         try {
             val command = input.readCommand()
             val headers = input.readHeaderLines()
             val contentLength = headers["content-length"]?.toInt()
             val body = input.readBody(contentLength)
-            return StompFrame(
+            return StompFrameFromClient(
                 command = command,
                 headers = headers,
                 body = body
@@ -109,13 +110,13 @@ abstract class StompProtocol(
         }
     }
 
-    internal fun encodeFrame(stompFrame: StompFrame): ByteArray {
+    internal fun encodeFrame(stompFrame: StompFrameFromServer): ByteArray {
         val baos = ByteArrayOutputStream()
         writeFrame(baos, stompFrame)
         return baos.toByteArray()
     }
 
-    internal fun writeFrame(baos: ByteArrayOutputStream, stompFrame: StompFrame) {
+    internal fun writeFrame(baos: ByteArrayOutputStream, stompFrame: StompFrameFromServer) {
         baos.writer(StandardCharsets.UTF_8).use {
             it.write(stompFrame.command.name)
             it.write('\n'.toInt())

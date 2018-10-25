@@ -2,7 +2,7 @@ package com.youcruit.atmosphere.stomp
 
 import com.youcruit.atmosphere.stomp.protocol.EfficientByteArrayOutputStream
 import com.youcruit.atmosphere.stomp.protocol.ServerStompCommand
-import com.youcruit.atmosphere.stomp.protocol.StompFrame
+import com.youcruit.atmosphere.stomp.protocol.StompFrameFromServer
 import com.youcruit.atmosphere.stomp.protocol.StompProtocol
 import java.nio.charset.StandardCharsets
 import java.util.UUID
@@ -58,7 +58,7 @@ internal class Subscriptions {
         for (id in ids) {
             protocol.writeFrame(
                     baos,
-                    StompFrame(
+                    StompFrameFromServer(
                             command = ServerStompCommand.MESSAGE,
                             headers = mapOf(
                                     "subscription" to id,
