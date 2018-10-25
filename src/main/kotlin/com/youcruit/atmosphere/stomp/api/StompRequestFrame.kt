@@ -3,8 +3,10 @@ package com.youcruit.atmosphere.stomp.api
 import com.youcruit.atmosphere.stomp.protocol.StompFrameFromClient
 import com.youcruit.atmosphere.stomp.util.FixedUriTemplate
 
+typealias Destination = String
+
 interface StompRequestFrame {
-    val originalDestination: String
+    val originalDestination: Destination
     val headers: Map<String, String>
     val id: String?
     val variables: Map<String, String>

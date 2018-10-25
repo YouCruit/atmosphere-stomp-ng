@@ -1,5 +1,6 @@
 package com.youcruit.atmosphere.stomp
 
+import com.youcruit.atmosphere.stomp.api.Destination
 import com.youcruit.atmosphere.stomp.protocol.EfficientByteArrayOutputStream
 import com.youcruit.atmosphere.stomp.protocol.ServerStompCommand
 import com.youcruit.atmosphere.stomp.protocol.StompFrameFromServer
@@ -13,9 +14,7 @@ import java.util.UUID
  * "/foo/965544df-4191-446d-b6c1-a2530af97f82/"
  * and NEVER
  * "/foo/{barId}/"
-*/
-private typealias Destination = String
-
+ */
 private typealias Id = String
 
 internal class Subscriptions {
@@ -33,7 +32,7 @@ internal class Subscriptions {
         idToDest.remove(id)
     }
 
-    fun findAllByDestination(destination: String): List<Id> {
+    fun findAllByDestination(destination: Destination): List<Id> {
         return idToDest
             .asSequence()
             .filter { (_, dest) -> dest.startsWith(destination) }
@@ -41,9 +40,9 @@ internal class Subscriptions {
             .toList()
     }
 
-    fun createFrames(broadcasterId: String, protocol: StompProtocol, message: Any): EfficientByteArrayOutputStream {
+    fun createFrames(destination: Destination, protocol: StompProtocol, message: Any, extraHeaders: Map<String, String> = mapOf()): EfficientByteArrayOutputStream {
         val ids = synchronized(this) {
-            findAllByDestination(broadcasterId)
+            findAllByDestination(destination)
         }
 
         val baos = EfficientByteArrayOutputStream()
@@ -57,16 +56,16 @@ internal class Subscriptions {
         // Generate a frame for each subscription
         for (id in ids) {
             protocol.writeFrame(
-                    baos,
-                    StompFrameFromServer(
-                            command = ServerStompCommand.MESSAGE,
-                            headers = mapOf(
-                                    "subscription" to id,
-                                    "message-id" to UUID.randomUUID().toString(),
-                                    "destination" to broadcasterId
-                            ),
-                            body = body
-                    )
+                baos,
+                StompFrameFromServer(
+                    command = ServerStompCommand.MESSAGE,
+                    headers = extraHeaders + mapOf(
+                        "subscription" to id,
+                        "message-id" to UUID.randomUUID().toString(),
+                        "destination" to destination
+                    ),
+                    body = body
+                )
             )
         }
         return baos

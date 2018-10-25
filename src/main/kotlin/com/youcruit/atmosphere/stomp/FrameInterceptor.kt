@@ -1,5 +1,8 @@
 package com.youcruit.atmosphere.stomp
 
+import com.youcruit.atmosphere.stomp.api.exceptions.StompErrorException
+import com.youcruit.atmosphere.stomp.api.exceptions.StompException
+import com.youcruit.atmosphere.stomp.api.exceptions.StompWithReplyException
 import com.youcruit.atmosphere.stomp.invoker.StompHeartBeatInterceptor
 import com.youcruit.atmosphere.stomp.invoker.StompReceiveFromClientInvoker
 import com.youcruit.atmosphere.stomp.invoker.StompSubscribeHandler
@@ -10,12 +13,9 @@ import com.youcruit.atmosphere.stomp.protocol.AVAILABLE_STOMP_PROTOCOLS
 import com.youcruit.atmosphere.stomp.protocol.ClientStompCommand
 import com.youcruit.atmosphere.stomp.protocol.ServerStompCommand
 import com.youcruit.atmosphere.stomp.protocol.Stomp10Protocol
-import com.youcruit.atmosphere.stomp.api.exceptions.StompErrorException
-import com.youcruit.atmosphere.stomp.api.exceptions.StompException
 import com.youcruit.atmosphere.stomp.protocol.StompFrameFromClient
 import com.youcruit.atmosphere.stomp.protocol.StompFrameFromServer
 import com.youcruit.atmosphere.stomp.protocol.StompProtocol
-import com.youcruit.atmosphere.stomp.api.exceptions.StompWithReplyException
 import com.youcruit.atmosphere.stomp.protocol.selectBestProtocol
 import com.youcruit.atmosphere.stomp.util.PROTOCOL_VERSION
 import com.youcruit.atmosphere.stomp.util.protocol
@@ -74,7 +74,7 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
                 } else {
                     val frame = resourceSession.protocol.parse(ByteArrayInputStream(body))
                     try {
-                        val action = when (frame.command as ClientStompCommand) {
+                        val action = when (frame.command) {
                             ClientStompCommand.CONNECT,
                             ClientStompCommand.STOMP -> {
                                 if (connect(resourceSession, frame, r)) {
@@ -116,7 +116,7 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
                         val frames = sessionFactory
                             .getSession(r)
                             .subscriptions
-                            .createFrames("/status", resourceSession.protocol, e.message!!)
+                            .createFrames(e.destination, resourceSession.protocol, e.message)
                         r.write(frames.toByteArray())
                     } catch (e: StompException) {
                         logger.info("STOMP exception: {} ", e.message)
@@ -218,7 +218,7 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
             headers["receipt-id"] = receipt
         }
         headers["content-type"] = "text/plain"
-        headers["message"] = e.message!!
+        headers["message"] = e.message
 
         r.write(
             stompProtocol.encodeFrame(
@@ -231,7 +231,7 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
                             it
                         }.toString()
                     } else {
-                        e.message!!
+                        e.message
                     }
                 )
             )
