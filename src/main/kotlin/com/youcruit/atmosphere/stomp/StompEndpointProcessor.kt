@@ -11,10 +11,10 @@ import com.youcruit.atmosphere.stomp.invoker.InjectingMethodInvocation
 import com.youcruit.atmosphere.stomp.invoker.stompHeartbeatInvoker
 import com.youcruit.atmosphere.stomp.invoker.stompReceiveInvoker
 import com.youcruit.atmosphere.stomp.invoker.stompSubscribeInvoker
+import com.youcruit.atmosphere.stomp.util.FixedUriTemplate
 import org.atmosphere.annotation.Processor
 import org.atmosphere.config.AtmosphereAnnotation
 import org.atmosphere.cpr.AtmosphereFramework
-import org.atmosphere.util.uri.UriTemplate
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Method
 
@@ -60,7 +60,7 @@ internal class StompEndpointProcessor : Processor<Any> {
 
         val invokers = framework.atmosphereConfig.stompReceiveInvoker()
 
-        val uriTemplate = UriTemplate(stompServiceAnnotation.value)
+        val uriTemplate = FixedUriTemplate(stompServiceAnnotation.value)
 
         val oldEndpoint = invokers.endpoints[uriTemplate]
         if (oldEndpoint != null) {
@@ -87,7 +87,7 @@ internal class StompEndpointProcessor : Processor<Any> {
 
         val invokers = framework.atmosphereConfig.stompSubscribeInvoker()
 
-        val template = UriTemplate(stompSubscriptionService.value)
+        val template = FixedUriTemplate(stompSubscriptionService.value)
         val oldEndpoint = invokers.endpoints[template]
         if (oldEndpoint != null) {
             throw IllegalArgumentException("path ${stompSubscriptionService.value} cannot be registered to $method, since it's already ${oldEndpoint.method}")

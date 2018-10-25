@@ -3,12 +3,12 @@ package com.youcruit.atmosphere.stomp.invoker
 import com.youcruit.atmosphere.stomp.protocol.StompErrorException
 import com.youcruit.atmosphere.stomp.protocol.StompException
 import com.youcruit.atmosphere.stomp.protocol.StompFrame
+import com.youcruit.atmosphere.stomp.util.FixedUriTemplate
 import org.atmosphere.cpr.AtmosphereConfig
 import org.atmosphere.cpr.AtmosphereResource
-import org.atmosphere.util.uri.UriTemplate
 
 internal class StompReceiveFromClientInvoker {
-    val endpoints = LinkedHashMap<UriTemplate, InjectingMethodInvocation>()
+    val endpoints = LinkedHashMap<FixedUriTemplate, InjectingMethodInvocation>()
 
     fun invoke(atmosphereResource: AtmosphereResource, stompFrame: StompFrame) {
         val destination = stompFrame.destination

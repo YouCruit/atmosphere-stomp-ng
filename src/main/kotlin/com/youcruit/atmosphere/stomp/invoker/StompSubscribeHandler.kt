@@ -3,17 +3,17 @@ package com.youcruit.atmosphere.stomp.invoker
 import com.youcruit.atmosphere.stomp.protocol.StompErrorException
 import com.youcruit.atmosphere.stomp.protocol.StompException
 import com.youcruit.atmosphere.stomp.protocol.StompFrame
+import com.youcruit.atmosphere.stomp.util.FixedUriTemplate
 import com.youcruit.atmosphere.stomp.util.subscriptions
 import org.atmosphere.cpr.AtmosphereConfig
 import org.atmosphere.cpr.AtmosphereFramework
 import org.atmosphere.cpr.AtmosphereResource
 import org.atmosphere.cpr.Broadcaster
-import org.atmosphere.util.uri.UriTemplate
 
 internal class StompSubscribeHandler(
     private val framework: AtmosphereFramework
 ) {
-    val endpoints = LinkedHashMap<UriTemplate, InjectingMethodInvocation>()
+    val endpoints = LinkedHashMap<FixedUriTemplate, InjectingMethodInvocation>()
 
     private val sessionFactory
         get() = framework.sessionFactory()

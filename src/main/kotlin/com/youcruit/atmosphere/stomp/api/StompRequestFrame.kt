@@ -1,7 +1,7 @@
 package com.youcruit.atmosphere.stomp.api
 
 import com.youcruit.atmosphere.stomp.protocol.StompFrame
-import org.atmosphere.util.uri.UriTemplate
+import com.youcruit.atmosphere.stomp.util.FixedUriTemplate
 
 interface StompRequestFrame {
     val originalDestination: String
@@ -12,7 +12,7 @@ interface StompRequestFrame {
 
 internal class StompRequestFrameImpl(
     internal val stompFrame: StompFrame,
-    private val template: UriTemplate
+    private val template: FixedUriTemplate
 ) : StompRequestFrame {
     override val headers: Map<String, String> = stompFrame.headers
     override val originalDestination = stompFrame.destination!!

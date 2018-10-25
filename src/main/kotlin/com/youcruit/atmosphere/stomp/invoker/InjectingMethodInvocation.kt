@@ -5,8 +5,8 @@ import com.youcruit.atmosphere.stomp.api.MessageDecoder
 import com.youcruit.atmosphere.stomp.api.StompRequestFrame
 import com.youcruit.atmosphere.stomp.api.StompRequestFrameImpl
 import com.youcruit.atmosphere.stomp.protocol.StompFrame
+import com.youcruit.atmosphere.stomp.util.FixedUriTemplate
 import org.atmosphere.cpr.AtmosphereResource
-import org.atmosphere.util.uri.UriTemplate
 import java.lang.reflect.Method
 
 internal class InjectingMethodInvocation(
@@ -27,7 +27,7 @@ internal class InjectingMethodInvocation(
             }.toTypedArray()
     }
 
-    fun invoke(atmosphereResource: AtmosphereResource, stompFrame: StompFrame, template: UriTemplate): Any? {
+    fun invoke(atmosphereResource: AtmosphereResource, stompFrame: StompFrame, template: FixedUriTemplate): Any? {
         val stompRequestFrame = StompRequestFrameImpl(stompFrame, template)
         atmosphereResource.request.setAttribute(FrameInterceptor.STOMP_REQUEST_FRAME, stompRequestFrame)
 
