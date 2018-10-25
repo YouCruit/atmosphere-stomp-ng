@@ -1,6 +1,6 @@
 package com.youcruit.atmosphere.stomp.protocol
 
-open class StompException : StompErrorException {
+class StompWithReplyException: StompException {
     constructor(message: String) : super(message)
     constructor(message: String, cause: Throwable) : super(message, cause)
 }

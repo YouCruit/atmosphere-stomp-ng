@@ -14,6 +14,7 @@ import com.youcruit.atmosphere.stomp.protocol.StompErrorException
 import com.youcruit.atmosphere.stomp.protocol.StompException
 import com.youcruit.atmosphere.stomp.protocol.StompFrame
 import com.youcruit.atmosphere.stomp.protocol.StompProtocol
+import com.youcruit.atmosphere.stomp.protocol.StompWithReplyException
 import com.youcruit.atmosphere.stomp.protocol.selectBestProtocol
 import com.youcruit.atmosphere.stomp.util.PROTOCOL_VERSION
 import com.youcruit.atmosphere.stomp.util.protocol
@@ -104,12 +105,15 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
                         }
                         if (frame.receipt != null) {
                             r.write(
-                                resourceSession.protocol.encodeFrame(
-                                    StompFrame.receiptOf(frame)
-                                )
+                                    resourceSession.protocol.encodeFrame(
+                                            StompFrame.receiptOf(frame)
+                                    )
                             )
                         }
                         return action
+                    }catch (e: StompWithReplyException) {
+                        val frames = sessionFactory.getSession(r).subscriptions.createFrames("/status", resourceSession.protocol, e.message!!)
+                        r.write(frames.toByteArray())
                     } catch (e: StompException) {
                         logger.info("STOMP exception: {} ", e.message)
                     } catch (e: StompErrorException) {
