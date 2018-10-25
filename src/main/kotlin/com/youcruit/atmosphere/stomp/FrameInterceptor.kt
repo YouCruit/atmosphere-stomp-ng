@@ -193,7 +193,7 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
             ?.let {
                 HEART_BEAT_REGEX.matchEntire(it)
             }?.groupValues
-            ?.let { (from, to) ->
+            ?.let { (_, from, to) ->
                 IntRange(from.toInt(), to.toInt())
             } ?: IntRange(0, Int.MAX_VALUE)
         if (clientInterval.first < 0 || clientInterval.last < 0) {
