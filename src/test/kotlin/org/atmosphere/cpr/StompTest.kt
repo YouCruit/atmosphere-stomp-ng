@@ -29,8 +29,9 @@ import javax.servlet.ServletConfig
 import javax.servlet.ServletContext
 import javax.servlet.ServletException
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.test.fail
 
 abstract class StompTest {
     lateinit var processor: AsynchronousProcessor
@@ -92,8 +93,7 @@ abstract class StompTest {
 
     protected fun newAtmosphereResource(
         req: AtmosphereRequest,
-        res: AtmosphereResponse,
-        bindToRequest: Boolean
+        res: AtmosphereResponse
     ): AtmosphereResource {
 
         var ar = framework.arFactory.find(MAGIC_UUID) as? AtmosphereResourceImpl
@@ -118,10 +118,6 @@ abstract class StompTest {
             }
         })
 
-        if (bindToRequest) {
-            req.setAttribute(FrameworkConfig.INJECTED_ATMOSPHERE_RESOURCE, ar)
-            framework.arFactory.resources().put(ar.uuid(), ar)
-        }
         return ar
     }
 
@@ -174,7 +170,8 @@ abstract class StompTest {
 
     internal fun runMessage(
         frame: StompFrameFromClient,
-        bindToRequest: Boolean = false,
+        bindToRequest: Boolean = true,
+        assertNoMessage: Boolean = false,
         verifier: (StompFrameFromServer) -> Boolean
     ) {
         val req = newRequest(frame)
@@ -182,7 +179,7 @@ abstract class StompTest {
 
         val latch = LinkedBlockingQueue<Any>()
 
-        val ar = newAtmosphereResource(req, res, bindToRequest)
+        val ar = newAtmosphereResource(req, res)
 
         doAnswer {
             try {
@@ -219,9 +216,13 @@ abstract class StompTest {
         processor.service(ar.request, ar.response)
 
         val result = latch.poll(3, TimeUnit.SECONDS)
-            ?: fail("Did not receive any data before timeout")
-        if (result is Throwable) {
-            throw result
+        if (assertNoMessage) {
+            assertNull(result)
+        } else {
+            if (result is Throwable) {
+                throw result
+            }
+            assertNotNull("Did not receive any data before timeout")
         }
     }
 

@@ -30,11 +30,6 @@ class StompTestService {
             .broadcast("FOOOOOOOOOOOOOOOOOOOO")
     }
 
-    @StompSubscriptionService("/listen/happy")
-    fun happy(): Boolean {
-        return true
-    }
-
     @StompSubscriptionService("/listen/sad")
     fun sad(): Boolean {
         return false
