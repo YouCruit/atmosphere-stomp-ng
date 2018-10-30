@@ -24,11 +24,11 @@ internal class StompSubscribeHandler(
             throw StompErrorException("SUBSCRIBE must have an id")
         }
 
-        val substitutions = sessionFactory.getSession(atmosphereResource).subscriptions
+        val subscriptions = sessionFactory.getSession(atmosphereResource).subscriptions
 
-        synchronized(substitutions) {
+        synchronized(subscriptions) {
 
-            if (substitutions.getById(id) != null) {
+            if (subscriptions.getById(id) != null) {
                 throw StompErrorException("Already subscribed with $id")
             }
 
@@ -50,7 +50,7 @@ internal class StompSubscribeHandler(
                 ?: atmosphereResource
             broadcaster.addAtmosphereResource(ar)
 
-            substitutions.addSubscription(id = id, destination = destination)
+            subscriptions.addSubscription(id = id, destination = destination)
         }
     }
 
