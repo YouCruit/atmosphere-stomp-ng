@@ -1,5 +1,3 @@
-package org.atmosphere.cpr
-
 import com.youcruit.atmosphere.stomp.api.StompRequestFrame
 import com.youcruit.atmosphere.stomp.api.annotations.StompEndpoint
 import com.youcruit.atmosphere.stomp.api.annotations.StompService
@@ -8,12 +6,13 @@ import com.youcruit.atmosphere.stomp.api.exceptions.StompWithReplyException
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.test.assertEquals
+import org.atmosphere.cpr.AtmosphereFramework
+import org.atmosphere.cpr.Broadcaster
 
 @StompEndpoint
 class StompTestService {
     @Inject
     lateinit var atmosphereFramework: AtmosphereFramework
-
 
     @StompService("/send/sad")
     fun sendSad() {
@@ -27,8 +26,6 @@ class StompTestService {
             .broadcasterFactory
             .lookup<Broadcaster>("/status", true)
             .broadcast("FOOOOOOOOOOOOOOOOOOOO")
-
-
     }
 
     @StompSubscriptionService("/listen/happy")
@@ -41,12 +38,10 @@ class StompTestService {
         return false
     }
 
-
     @StompSubscriptionService("/listen/conditional/{shouldWork}")
     fun conditional(stompRequestFrame: StompRequestFrame): Boolean {
         return stompRequestFrame.variables["shouldWork"]!!.toBoolean()
     }
-
 
     @StompService("/send/foo/{testVar}")
     fun barbar(stompRequestFrame: StompRequestFrame) {

@@ -45,7 +45,6 @@ abstract class StompProtocol(
         }
     }
 
-
     open fun InputStream.readCommand() =
         ClientStompCommand.valueOf(readUtf8Line(14))
 

@@ -1,10 +1,8 @@
-package org.atmosphere.cpr
-
 import com.youcruit.atmosphere.stomp.protocol.ClientStompCommand
 import com.youcruit.atmosphere.stomp.protocol.StompFrameFromClient
+import org.atmosphere.cpr.StompTest
 import org.junit.Before
 import org.junit.Test
-
 
 class StompInterceptorTest : StompTest() {
 

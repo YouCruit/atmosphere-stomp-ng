@@ -32,7 +32,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
-
 abstract class StompTest {
     lateinit var processor: AsynchronousProcessor
     lateinit var config: AtmosphereConfig
@@ -46,7 +45,6 @@ abstract class StompTest {
         framework.destroy()
         config.destroy()
     }
-
 
     fun initAtmosphere(vararg classes: Class<*>) {
         atmosphereHandler = mock()
@@ -145,9 +143,7 @@ abstract class StompTest {
               "timestamp": "${Clock.systemUTC().instant()}",
               "message": "hello"
             }""",
-            headers = mapOf(
-
-            )
+            headers = headers
         )
     }
 
@@ -210,7 +206,7 @@ abstract class StompTest {
 
         processor.service(ar.request, ar.response)
 
-        val data = latch.poll(3, TimeUnit.SECONDS)
+        latch.poll(3, TimeUnit.SECONDS)
             ?: fail("Did not receive any data before timeout")
     }
 
