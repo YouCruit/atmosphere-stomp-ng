@@ -28,6 +28,24 @@ abstract class StompProtocol(
         }
     }
 
+    @Deprecated("Test only")
+    internal fun parseFromServer(input: InputStream): StompFrameFromServer {
+        try {
+            val command = ServerStompCommand.valueOf(input.readUtf8Line(14))
+            val headers = input.readHeaderLines()
+            val contentLength = headers["content-length"]?.toInt()
+            val body = input.readBody(contentLength)
+            return StompFrameFromServer(
+                command = command,
+                headers = headers,
+                body = body
+            )
+        } catch (e: IOException) {
+            throw StompErrorException("Error reading stream", e)
+        }
+    }
+
+
     open fun InputStream.readCommand() =
         ClientStompCommand.valueOf(readUtf8Line(14))
 
@@ -110,13 +128,13 @@ abstract class StompProtocol(
         }
     }
 
-    internal fun encodeFrame(stompFrame: StompFrameFromServer): ByteArray {
+    internal fun encodeFrame(stompFrame: StompFrame): ByteArray {
         val baos = ByteArrayOutputStream()
         writeFrame(baos, stompFrame)
         return baos.toByteArray()
     }
 
-    internal fun writeFrame(baos: ByteArrayOutputStream, stompFrame: StompFrameFromServer) {
+    internal fun writeFrame(baos: ByteArrayOutputStream, stompFrame: StompFrame) {
         baos.writer(StandardCharsets.UTF_8).use {
             it.write(stompFrame.command.name)
             it.write('\n'.toInt())
@@ -157,6 +175,12 @@ abstract class StompProtocol(
                 else -> throw StompErrorException("Not a valid replacement: ${it.groupValues[0]}")
             }
         }
+    }
+
+    internal fun asString(stompFrame: StompFrame): String {
+        val baos = EfficientByteArrayOutputStream()
+        writeFrame(baos, stompFrame)
+        return baos.asString()
     }
 }
 
