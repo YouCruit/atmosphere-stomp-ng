@@ -92,7 +92,7 @@ abstract class StompTest {
     }
 
     @Suppress("UNUSED_PARAMETER")
-    fun configureFrameWork(framework: AtmosphereFramework) {}
+    open fun configureFrameWork(framework: AtmosphereFramework) {}
 
     protected fun newAtmosphereResource(
         req: AtmosphereRequest,
