@@ -16,7 +16,14 @@ internal var AtmosphereResourceSession.protocol: StompProtocol
 private val SUBSCRIPTIONS = "com.youcruit.atmosphere.stomp.Subscriptions"
 
 internal var AtmosphereResourceSession.subscriptions: Subscriptions
-    get() = getAttribute(SUBSCRIPTIONS) as Subscriptions
+    get() {
+        return getAttribute(SUBSCRIPTIONS) as Subscriptions?
+            ?: let {
+                val sub = Subscriptions()
+                setAttribute(SUBSCRIPTIONS, sub)
+                sub
+            }
+    }
     set(value) {
         setAttribute(SUBSCRIPTIONS, value)
     }
