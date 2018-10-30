@@ -90,4 +90,3 @@ task sourceJar(type: Jar) {
     classifier = 'source'
 }
 assemble.dependsOn sourceJar
-
