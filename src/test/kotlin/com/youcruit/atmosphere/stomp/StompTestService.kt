@@ -1,13 +1,15 @@
+package com.youcruit.atmosphere.stomp
+
 import com.youcruit.atmosphere.stomp.api.StompRequestFrame
 import com.youcruit.atmosphere.stomp.api.annotations.StompEndpoint
 import com.youcruit.atmosphere.stomp.api.annotations.StompService
 import com.youcruit.atmosphere.stomp.api.annotations.StompSubscriptionService
 import com.youcruit.atmosphere.stomp.api.exceptions.StompWithReplyException
+import org.atmosphere.cpr.AtmosphereFramework
+import org.atmosphere.cpr.Broadcaster
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.test.assertEquals
-import org.atmosphere.cpr.AtmosphereFramework
-import org.atmosphere.cpr.Broadcaster
 
 @StompEndpoint
 class StompTestService {
@@ -16,7 +18,7 @@ class StompTestService {
 
     @StompService("/send/sad")
     fun sendSad() {
-        throw StompWithReplyException("Fail", "/very/sad")
+        throw StompWithReplyException("Fail", "/status")
     }
 
     @StompService("/send/happy")

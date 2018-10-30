@@ -1,3 +1,5 @@
+package com.youcruit.atmosphere.stomp
+
 import com.youcruit.atmosphere.stomp.protocol.ClientStompCommand
 import com.youcruit.atmosphere.stomp.protocol.StompFrameFromClient
 import org.atmosphere.cpr.StompTest
@@ -7,7 +9,7 @@ import org.junit.Test
 class StompInterceptorTest : StompTest() {
 
     @Before
-    fun foo() {
+    fun setUp() {
         initAtmosphere(StompTestService::class.java)
     }
 
@@ -27,14 +29,15 @@ class StompInterceptorTest : StompTest() {
 
     @Test
     fun stompServiceSad() {
+        subscribeStatus()
         runMessage(
             StompFrameFromClient(
                 command = ClientStompCommand.SEND,
-                headers = mapOf("destination" to "/send/happy"),
+                headers = mapOf("destination" to "/send/sad"),
                 body = "No care"
             ),
             true,
-            ".*FOOOOOOO.*"
+            ".*Fail.*"
         )
     }
 }

@@ -60,12 +60,14 @@ abstract class StompTest {
         framework.customAnnotationPackages().add("com.youcruit.atmosphere.stomp")
 
         framework.init(object : ServletConfig {
+            val servletContext = StompTestServletContext()
+
             override fun getServletName(): String {
                 return "void"
             }
 
             override fun getServletContext(): ServletContext {
-                return SERVLET_CONTEXT
+                return servletContext
             }
 
             override fun getInitParameter(name: String): String? {
@@ -178,16 +180,21 @@ abstract class StompTest {
         val req = newRequest(frame)
         val res = AtmosphereResponseImpl.newInstance()
 
-        val latch = LinkedBlockingQueue<StompFrame>()
+        val latch = LinkedBlockingQueue<Any>()
 
         val ar = newAtmosphereResource(req, res, bindToRequest)
 
         doAnswer {
-            val data = (it.arguments[0] as AtmosphereResourceEvent).message as String
-            @Suppress("DEPRECATION")
-            val serverFrame = Stomp10Protocol.parseFromServer(ByteArrayInputStream(data.toByteArray(StandardCharsets.UTF_8)))
-            if (verifier(serverFrame)) {
-                latch.add(serverFrame)
+            try {
+                val data = (it.arguments[0] as AtmosphereResourceEvent).message as String
+                @Suppress("DEPRECATION")
+                val serverFrame = Stomp10Protocol.parseFromServer(ByteArrayInputStream(data.toByteArray(StandardCharsets.UTF_8)))
+                if (verifier(serverFrame)) {
+                    latch.add(serverFrame)
+                }
+            } catch (t: Throwable) {
+                latch.add(t)
+                throw t
             }
         }
             .`when`(ar.atmosphereHandler)
@@ -195,19 +202,27 @@ abstract class StompTest {
 
         ar.response.asyncIOWriter(object : AsyncIOWriterAdapter() {
             override fun write(r: AtmosphereResponse, data: ByteArray): AsyncIOWriter {
-                @Suppress("DEPRECATION")
-                val serverFrame = Stomp10Protocol.parseFromServer(ByteArrayInputStream(data))
-                if (verifier(serverFrame)) {
-                    latch.add(serverFrame)
+                try {
+                    @Suppress("DEPRECATION")
+                    val serverFrame = Stomp10Protocol.parseFromServer(ByteArrayInputStream(data))
+                    if (verifier(serverFrame)) {
+                        latch.add(serverFrame)
+                    }
+                    return this
+                } catch (t: Throwable) {
+                    latch.add(t)
+                    throw t
                 }
-                return this
             }
         })
 
         processor.service(ar.request, ar.response)
 
-        latch.poll(3, TimeUnit.SECONDS)
+        val result = latch.poll(3, TimeUnit.SECONDS)
             ?: fail("Did not receive any data before timeout")
+        if (result is Throwable) {
+            throw result
+        }
     }
 
     internal fun runMessage(
@@ -245,31 +260,31 @@ abstract class StompTest {
     companion object {
         private val MAGIC_UUID = UUID.randomUUID().toString()
         private val SUBSCRIPTION_ID = UUID.randomUUID().toString()
+    }
+}
 
-        val SERVLET_CONTEXT = object : ServletContext by (mock()) {
-            val attributes = LinkedHashMap<String, Any?>(
-                mapOf(
-                    AtmosphereFramework.MetaServiceAction::class.java.name to mapOf(
-                        FrameInterceptor::class.java.name to AtmosphereFramework.MetaServiceAction.INSTALL,
-                        AtmosphereResourceLifecycleInterceptor::class.java.name to AtmosphereFramework.MetaServiceAction.INSTALL,
-                        HeartbeatInterceptor::class.java.name to AtmosphereFramework.MetaServiceAction.EXCLUDE
-                    )
-                )
+class StompTestServletContext : ServletContext by mock() {
+    val attributes = LinkedHashMap<String, Any?>(
+        mapOf(
+            AtmosphereFramework.MetaServiceAction::class.java.name to mapOf(
+                FrameInterceptor::class.java.name to AtmosphereFramework.MetaServiceAction.INSTALL,
+                AtmosphereResourceLifecycleInterceptor::class.java.name to AtmosphereFramework.MetaServiceAction.INSTALL,
+                HeartbeatInterceptor::class.java.name to AtmosphereFramework.MetaServiceAction.EXCLUDE
             )
+        )
+    )
 
-            override fun getAttribute(name: String): Any? =
-                attributes[name]
+    override fun getAttribute(name: String): Any? =
+        attributes[name]
 
-            override fun getAttributeNames(): Enumeration<String> =
-                Collections.enumeration(attributes.keys)
+    override fun getAttributeNames(): Enumeration<String> =
+        Collections.enumeration(attributes.keys)
 
-            override fun setAttribute(name: String, `object`: Any?) {
-                attributes[name] = `object`
-            }
+    override fun setAttribute(name: String, `object`: Any?) {
+        attributes[name] = `object`
+    }
 
-            override fun removeAttribute(name: String?) {
-                attributes.remove(name)
-            }
-        }
+    override fun removeAttribute(name: String?) {
+        attributes.remove(name)
     }
 }
