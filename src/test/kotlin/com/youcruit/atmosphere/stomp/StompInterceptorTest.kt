@@ -75,6 +75,6 @@ class StompInterceptorTest : StompTest() {
                 body = "No care"
             ),
             assertNoMessage = true
-        ) {true}
+        ) { true }
     }
 }
