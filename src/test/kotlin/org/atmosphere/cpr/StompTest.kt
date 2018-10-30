@@ -59,7 +59,7 @@ abstract class StompTest {
         }
 
         framework.customAnnotationPackages().add("com.youcruit.atmosphere.stomp")
-
+        configureFrameWork(framework)
         framework.init(object : ServletConfig {
             val servletContext = StompTestServletContext()
 
@@ -90,6 +90,9 @@ abstract class StompTest {
         }
         framework.setAsyncSupport(processor)
     }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun configureFrameWork(framework: AtmosphereFramework) {}
 
     protected fun newAtmosphereResource(
         req: AtmosphereRequest,
