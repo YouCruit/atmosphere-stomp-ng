@@ -14,7 +14,6 @@ import com.youcruit.atmosphere.stomp.protocol.StompFrameFromClient
 import com.youcruit.atmosphere.stomp.protocol.StompFrameFromServer
 import com.youcruit.atmosphere.stomp.util.subscriptions
 import org.atmosphere.container.BlockingIOCometSupport
-import org.atmosphere.cpr.ApplicationConfig.PROPERTY_BLOCKING_COMETSUPPORT
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor
 import org.atmosphere.interceptor.HeartbeatInterceptor
 import org.junit.After
