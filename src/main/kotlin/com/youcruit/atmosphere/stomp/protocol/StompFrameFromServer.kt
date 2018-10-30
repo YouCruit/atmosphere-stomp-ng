@@ -8,6 +8,9 @@ class StompFrameFromServer(
     headers,
     body
 ) {
+    override val receipt: String?
+        get() = headers["receipt-id"]
+
     constructor(
         command: ServerStompCommand,
         headers: Map<String, String>,

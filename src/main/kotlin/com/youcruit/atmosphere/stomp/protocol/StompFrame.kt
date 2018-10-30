@@ -15,8 +15,7 @@ abstract class StompFrame(
     val destination: String?
         get() = headers["destination"]
 
-    val receipt: String?
-        get() = headers["receipt"]
+    abstract val receipt: String?
 
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("Transaction is NOT supported")

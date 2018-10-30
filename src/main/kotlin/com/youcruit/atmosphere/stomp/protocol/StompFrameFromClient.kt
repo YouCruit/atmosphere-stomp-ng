@@ -8,6 +8,10 @@ internal class StompFrameFromClient(
     headers,
     body
 ) {
+
+    override val receipt: String?
+        get() = headers["receipt"]
+
     constructor(
         command: ClientStompCommand,
         headers: Map<String, String>,
