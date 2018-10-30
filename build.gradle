@@ -75,7 +75,7 @@ artifacts {
 }
 
 dependencies {
-    implementation "org.atmosphere:atmosphere-runtime:${atmosphere_version}"
+    api "org.atmosphere:atmosphere-runtime:${atmosphere_version}"
 
     implementation "javax.servlet:javax.servlet-api:3.1.0"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
@@ -85,7 +85,6 @@ dependencies {
     testImplementation "org.slf4j:slf4j-simple:$slf4j_version"
     testImplementation "junit:junit:4.12"
     testImplementation "javax.inject:javax.inject:1"
-
 
     testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0-RC3"
 
