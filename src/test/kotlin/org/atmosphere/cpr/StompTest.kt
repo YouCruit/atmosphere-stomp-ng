@@ -13,6 +13,8 @@ import com.youcruit.atmosphere.stomp.protocol.StompFrame
 import com.youcruit.atmosphere.stomp.protocol.StompFrameFromClient
 import com.youcruit.atmosphere.stomp.protocol.StompFrameFromServer
 import com.youcruit.atmosphere.stomp.util.subscriptions
+import org.atmosphere.container.BlockingIOCometSupport
+import org.atmosphere.cpr.ApplicationConfig.PROPERTY_BLOCKING_COMETSUPPORT
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor
 import org.atmosphere.interceptor.HeartbeatInterceptor
 import org.junit.After
@@ -60,6 +62,8 @@ abstract class StompTest {
 
         framework.customAnnotationPackages().add("com.youcruit.atmosphere.stomp")
         configureFrameWork(framework)
+        config = framework.atmosphereConfig
+        framework.asyncSupport = BlockingIOCometSupport(config)
         framework.init(object : ServletConfig {
             val servletContext = StompTestServletContext()
 
@@ -72,7 +76,10 @@ abstract class StompTest {
             }
 
             override fun getInitParameter(name: String): String? {
-                return if (ApplicationConfig.READ_GET_BODY == name) "true" else null
+                return when (name) {
+                    ApplicationConfig.READ_GET_BODY -> "true"
+                    else -> null
+                }
             }
 
             override fun getInitParameterNames(): Enumeration<String>? {
@@ -80,7 +87,6 @@ abstract class StompTest {
             }
         })
 
-        config = framework.atmosphereConfig
         framework.addAtmosphereHandler("/ws/stomp", atmosphereHandler)
         processor = object : AsynchronousProcessor(config) {
             @Throws(IOException::class, ServletException::class)
