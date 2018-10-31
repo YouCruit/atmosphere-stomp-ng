@@ -227,7 +227,6 @@ abstract class StompTest {
         }
     }
 
-
     open fun runMessage(
         frame: StompFrameFromClient,
         assertNoMessage: Boolean = false,
@@ -237,7 +236,6 @@ abstract class StompTest {
 
         latch.any { verifier(it) }
     }
-
 
     open fun runMessage(
         frame: StompFrameFromClient,
