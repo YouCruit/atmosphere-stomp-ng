@@ -42,7 +42,6 @@ abstract class StompTest {
     @Volatile
     private var disconnect: Boolean = false
 
-
     @After
     fun destroyAtmosphere() {
         framework.destroy()
