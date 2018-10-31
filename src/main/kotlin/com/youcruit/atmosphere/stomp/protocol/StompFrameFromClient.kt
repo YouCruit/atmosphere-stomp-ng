@@ -1,6 +1,6 @@
 package com.youcruit.atmosphere.stomp.protocol
 
-internal class StompFrameFromClient(
+class StompFrameFromClient(
     override val command: ClientStompCommand,
     headers: Map<String, String>,
     body: ByteArray
