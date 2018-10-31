@@ -60,8 +60,6 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
             return errorAndClose(Stomp10Protocol, StompErrorException("Failed to read body", e), null, r)
         }
         try {
-
-            // Let the global handler suspend the connection if no action is submitted
             if (body.isEmpty()) {
                 return Action.CONTINUE
             } else {
