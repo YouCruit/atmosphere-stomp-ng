@@ -120,6 +120,8 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
                         logger.info("STOMP exception: {} ", e.message)
                     } catch (e: StompErrorException) {
                         return errorAndClose(resourceSession.protocol, e, frame.receipt, r)
+                    } catch (e: Exception) {
+                        return errorAndClose(resourceSession.protocol, e, frame.receipt, r, "")
                     }
                 }
             }
