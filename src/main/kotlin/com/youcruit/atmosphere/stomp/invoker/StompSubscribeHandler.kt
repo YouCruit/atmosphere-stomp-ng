@@ -42,7 +42,7 @@ internal class StompSubscribeHandler(
                 }
 
             if (!accepted) {
-                throw StompException("No subscription endpoint allowed subscription")
+                throw StompErrorException("No subscription endpoint allowed subscription")
             }
 
             val broadcaster: Broadcaster = framework.broadcasterFactory.lookup(destination, true)
