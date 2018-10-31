@@ -16,7 +16,6 @@ import com.youcruit.atmosphere.stomp.util.subscriptions
 import org.atmosphere.container.BlockingIOCometSupport
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor
 import org.atmosphere.interceptor.HeartbeatInterceptor
-import org.atmosphere.util.UUIDProvider
 import org.junit.After
 import java.io.ByteArrayInputStream
 import java.io.IOException
@@ -27,12 +26,11 @@ import java.util.Enumeration
 import java.util.UUID
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import javax.servlet.ServletConfig
 import javax.servlet.ServletContext
 import javax.servlet.ServletException
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 abstract class StompTest {
@@ -49,7 +47,7 @@ abstract class StompTest {
         config.destroy()
     }
 
-    fun initAtmosphere(vararg classes: Class<*>) {
+    open fun initAtmosphere(vararg classes: Class<*>) {
         atmosphereHandler = mock()
         framework = AtmosphereFramework()
 
@@ -99,9 +97,10 @@ abstract class StompTest {
     }
 
     @Suppress("UNUSED_PARAMETER")
-    open fun configureFrameWork(framework: AtmosphereFramework) {}
+    open fun configureFrameWork(framework: AtmosphereFramework) {
+    }
 
-    protected fun newAtmosphereResource(
+    open fun newAtmosphereResource(
         req: AtmosphereRequest,
         res: AtmosphereResponse
     ): AtmosphereResource {
@@ -130,7 +129,7 @@ abstract class StompTest {
         return ar
     }
 
-    fun simpleSend(
+    open fun simpleSend(
         destination: String,
         command: ClientStompCommand = ClientStompCommand.SEND,
         requestReceipt: Boolean = false
@@ -154,7 +153,7 @@ abstract class StompTest {
         )
     }
 
-    fun newRequest(stompFrame: StompFrame): AtmosphereRequest {
+    open fun newRequest(stompFrame: StompFrame): AtmosphereRequest {
         val req = AtmosphereRequestImpl.Builder()
             .pathInfo("/ws/stomp")
             .method("GET")
@@ -167,7 +166,7 @@ abstract class StompTest {
         return req
     }
 
-    fun addToBroadcaster(destination: Destination, ar: AtmosphereResource) {
+    open fun addToBroadcaster(destination: Destination, ar: AtmosphereResource) {
         val b = framework.broadcasterFactory.lookup<Broadcaster>(destination)
         ar.atmosphereConfig
             .sessionFactory()
@@ -177,12 +176,9 @@ abstract class StompTest {
         b.addAtmosphereResource(ar)
     }
 
-    fun runMessage(
-        frame: StompFrameFromClient,
-        bindToRequest: Boolean = true,
-        assertNoMessage: Boolean = false,
-        verifier: (StompFrameFromServer) -> Boolean
-    ) {
+    open fun runMessage(
+        frame: StompFrameFromClient
+    ): Sequence<StompFrameFromServer> {
         val req = newRequest(frame)
         val res = AtmosphereResponseImpl.newInstance()
 
@@ -195,9 +191,8 @@ abstract class StompTest {
                 val data = (it.arguments[0] as AtmosphereResourceEvent).message as String
                 @Suppress("DEPRECATION")
                 val serverFrame = Stomp10Protocol.parseFromServer(ByteArrayInputStream(data.toByteArray(StandardCharsets.UTF_8)))
-                if (verifier(serverFrame)) {
-                    latch.add(serverFrame)
-                }
+                latch.add(serverFrame)
+                Unit
             } catch (t: Throwable) {
                 latch.add(t)
                 throw t
@@ -211,9 +206,7 @@ abstract class StompTest {
                 try {
                     @Suppress("DEPRECATION")
                     val serverFrame = Stomp10Protocol.parseFromServer(ByteArrayInputStream(data))
-                    if (verifier(serverFrame)) {
-                        latch.add(serverFrame)
-                    }
+                    latch.add(serverFrame)
                     return this
                 } catch (t: Throwable) {
                     latch.add(t)
@@ -223,37 +216,52 @@ abstract class StompTest {
         })
 
         processor.service(ar.request, ar.response)
-
-        val result = latch.poll(3, TimeUnit.SECONDS)
-        if (assertNoMessage) {
-            assertNull(result)
-        } else {
-            if (result is Throwable) {
-                throw result
+        return generateSequence {
+            latch.poll(3, TimeUnit.SECONDS)
+                ?: throw TimeoutException("Did not receive any data before timeout")
+        }.map {
+            if (it is Throwable) {
+                throw it
             }
-            assertNotNull("Did not receive any data before timeout")
+            it as StompFrameFromServer
         }
     }
 
-    internal fun runMessage(
+
+    open fun runMessage(
         frame: StompFrameFromClient,
-        bindToRequest: Boolean = false,
+        assertNoMessage: Boolean = false,
+        verifier: (StompFrameFromServer) -> Boolean
+    ) {
+        val latch = runMessage(frame)
+
+        latch.any { verifier(it) }
+    }
+
+
+    open fun runMessage(
+        frame: StompFrameFromClient,
         regex: String
     ) {
-        runMessage(frame, bindToRequest) {
+        runMessage(frame) {
             val rex = Regex(regex, RegexOption.DOT_MATCHES_ALL)
             assertTrue(rex.matches(it.bodyAsString()))
             true
         }
     }
 
-    protected fun subscribeStatus() {
+    open fun subscribeStatus() {
         val receiptId = UUID.randomUUID().toString()
+        val path = "/status"
+        subscribe(path, receiptId)
+    }
+
+    open fun subscribe(path: String, receiptId: String) {
         runMessage(
             StompFrameFromClient(
                 command = ClientStompCommand.SUBSCRIBE,
                 headers = mapOf(
-                    "destination" to "/status",
+                    "destination" to path,
                     "id" to "1",
                     "receipt" to receiptId
                 ),
@@ -274,7 +282,7 @@ abstract class StompTest {
 }
 
 class StompTestServletContext : ServletContext by mock() {
-    val attributes = LinkedHashMap<String, Any?>(
+    private val attributes = LinkedHashMap<String, Any?>(
         mapOf(
             AtmosphereFramework.MetaServiceAction::class.java.name to mapOf(
                 FrameInterceptor::class.java.name to AtmosphereFramework.MetaServiceAction.INSTALL,

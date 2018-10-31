@@ -24,7 +24,6 @@ class StompInterceptorTest : StompTest() {
                 headers = mapOf("destination" to "/send/happy"),
                 body = "No care"
             ),
-            true,
             ".*FOOOOOOO.*"
         )
     }
@@ -38,7 +37,6 @@ class StompInterceptorTest : StompTest() {
                 headers = mapOf("destination" to "/send/sad"),
                 body = "No care"
             ),
-            true,
             ".*Fail.*"
         )
     }
@@ -75,6 +73,9 @@ class StompInterceptorTest : StompTest() {
                 body = "No care"
             ),
             assertNoMessage = true
-        ) { true }
+        ) {
+            assertEquals(ServerStompCommand.ERROR, it.command)
+            true
+        }
     }
 }
