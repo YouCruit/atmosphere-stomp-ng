@@ -16,6 +16,7 @@ import com.youcruit.atmosphere.stomp.util.subscriptions
 import org.atmosphere.container.BlockingIOCometSupport
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor
 import org.atmosphere.interceptor.HeartbeatInterceptor
+import org.atmosphere.util.UUIDProvider
 import org.junit.After
 import java.io.ByteArrayInputStream
 import java.io.IOException
@@ -60,6 +61,7 @@ abstract class StompTest {
         }
 
         framework.customAnnotationPackages().add("com.youcruit.atmosphere.stomp")
+        framework.uuidProvider { MAGIC_UUID }
         configureFrameWork(framework)
         config = framework.atmosphereConfig
         framework.asyncSupport = BlockingIOCometSupport(config)
@@ -107,10 +109,9 @@ abstract class StompTest {
         var ar = framework.arFactory.find(MAGIC_UUID) as? AtmosphereResourceImpl
 
         if (ar == null) {
-            ar = AtmosphereResourceImpl()
             val b: Broadcaster = framework.broadcasterFactory.lookup("/ws/stomp", true)
-            ar.initialize(config, b, req, res, framework.asyncSupport, atmosphereHandler)
-            ar.transport(AtmosphereResource.TRANSPORT.WEBSOCKET)
+            ar = framework.arFactory.create(config, b, req, res, framework.asyncSupport, atmosphereHandler, AtmosphereResource.TRANSPORT.WEBSOCKET) as AtmosphereResourceImpl
+            framework.arFactory.registerUuidForFindCandidate(ar)
         } else {
             ar.request.body(req.body().asString())
             ar.request.body(req.inputStream)
