@@ -176,7 +176,7 @@ abstract class StompTest {
         b.addAtmosphereResource(ar)
     }
 
-    internal fun runMessage(
+    fun runMessage(
         frame: StompFrameFromClient,
         bindToRequest: Boolean = true,
         assertNoMessage: Boolean = false,
