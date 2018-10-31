@@ -210,15 +210,15 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
         return Duration.ofMillis(clientInterval.last.toLong())
     }
 
-    private fun errorAndClose(stompProtocol: StompProtocol, e: StompErrorException, receipt: String?, r: AtmosphereResource): Action {
-        logger.error("STOMP ERROR: {} ", e.message, e)
+    private fun errorAndClose(stompProtocol: StompProtocol, e: Exception, receipt: String?, r: AtmosphereResource, message: String = e.message ?: ""): Action {
+        logger.error("STOMP ERROR: ${e.message}", e)
 
         val headers = LinkedHashMap<String, String>()
         if (receipt != null) {
             headers["receipt-id"] = receipt
         }
         headers["content-type"] = "text/plain"
-        headers["message"] = e.message
+        headers["message"] = message
 
         r.write(
             stompProtocol.encodeFrame(
@@ -231,7 +231,7 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
                             it
                         }.toString()
                     } else {
-                        e.message
+                        message
                     }
                 )
             )
