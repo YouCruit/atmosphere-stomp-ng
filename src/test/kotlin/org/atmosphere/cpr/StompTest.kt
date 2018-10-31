@@ -37,9 +37,11 @@ abstract class StompTest {
     lateinit var processor: AsynchronousProcessor
     lateinit var config: AtmosphereConfig
     lateinit var atmosphereHandler: AtmosphereHandler
+    lateinit var servletContext: ServletContext
     private lateinit var framework: AtmosphereFramework
     @Volatile
     private var disconnect: Boolean = false
+
 
     @After
     fun destroyAtmosphere() {
@@ -60,18 +62,18 @@ abstract class StompTest {
 
         framework.customAnnotationPackages().add("com.youcruit.atmosphere.stomp")
         framework.uuidProvider { MAGIC_UUID }
-        configureFrameWork(framework)
+        servletContext = StompTestServletContext()
+        configureFrameWork(framework, servletContext)
         config = framework.atmosphereConfig
         framework.asyncSupport = BlockingIOCometSupport(config)
         framework.init(object : ServletConfig {
-            val servletContext = StompTestServletContext()
 
             override fun getServletName(): String {
                 return "void"
             }
 
             override fun getServletContext(): ServletContext {
-                return servletContext
+                return this@StompTest.servletContext
             }
 
             override fun getInitParameter(name: String): String? {
@@ -97,7 +99,7 @@ abstract class StompTest {
     }
 
     @Suppress("UNUSED_PARAMETER")
-    open fun configureFrameWork(framework: AtmosphereFramework) {
+    open fun configureFrameWork(framework: AtmosphereFramework, servletContext: ServletContext) {
     }
 
     open fun newAtmosphereResource(
