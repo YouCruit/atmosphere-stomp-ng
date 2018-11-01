@@ -114,7 +114,12 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
                         val frames = sessionFactory
                             .getSession(r)
                             .subscriptions
-                            .createFrames(e.destination, resourceSession.protocol, e.message)
+                            .createFrames(
+                                    destination = e.destination,
+                                    protocol = resourceSession.protocol,
+                                    message = e.message,
+                                    extraHeaders = e.headers
+                            )
                         r.write(frames.toByteArray())
                     } catch (e: StompException) {
                         logger.info("STOMP exception: {} ", e.message)
