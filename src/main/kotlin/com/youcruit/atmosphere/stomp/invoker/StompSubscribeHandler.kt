@@ -46,9 +46,7 @@ internal class StompSubscribeHandler(
             }
 
             val broadcaster: Broadcaster = framework.broadcasterFactory.lookup(destination, true)
-            val ar = atmosphereResource.atmosphereConfig.resourcesFactory().find(atmosphereResource.uuid())
-                ?: atmosphereResource
-            broadcaster.addAtmosphereResource(ar)
+            broadcaster.addAtmosphereResource(atmosphereResource)
 
             subscriptions.addSubscription(id = id, destination = destination)
         }
