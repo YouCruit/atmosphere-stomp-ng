@@ -4,9 +4,11 @@ import com.youcruit.atmosphere.stomp.api.exceptions.StompErrorException
 import com.youcruit.atmosphere.stomp.api.exceptions.StompException
 import com.youcruit.atmosphere.stomp.api.exceptions.StompWithReplyException
 import com.youcruit.atmosphere.stomp.invoker.StompHeartBeatInterceptor
+import com.youcruit.atmosphere.stomp.invoker.StompOnDisconnectInterceptor
 import com.youcruit.atmosphere.stomp.invoker.StompReceiveFromClientInvoker
 import com.youcruit.atmosphere.stomp.invoker.StompSubscribeHandler
 import com.youcruit.atmosphere.stomp.invoker.stompHeartbeatInvoker
+import com.youcruit.atmosphere.stomp.invoker.stompOnDisconnectInvoker
 import com.youcruit.atmosphere.stomp.invoker.stompReceiveInvoker
 import com.youcruit.atmosphere.stomp.invoker.stompSubscribeInvoker
 import com.youcruit.atmosphere.stomp.protocol.AVAILABLE_STOMP_PROTOCOLS
@@ -46,6 +48,7 @@ import java.util.SortedSet
 class FrameInterceptor : AtmosphereInterceptorAdapter() {
     private lateinit var framework: AtmosphereFramework
     private lateinit var heartBeatInterceptor: StompHeartBeatInterceptor
+    private lateinit var onDisconnectInterceptor: StompOnDisconnectInterceptor
     private lateinit var sessionFactory: AtmosphereResourceSessionFactory
     private lateinit var stompReceiveFromClientInvoker: StompReceiveFromClientInvoker
     private lateinit var stompSubscribeHandler: StompSubscribeHandler
@@ -172,6 +175,8 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
                 ?: throw StompErrorException("Host not set. It's ignored, but required according to the spec.")
         }
 
+        r.addEventListener(onDisconnectInterceptor)
+
         resourceSession.subscriptions = Subscriptions()
         val headers = LinkedHashMap(mapOf(
             "version" to resourceSession.protocol.version.toString(),
@@ -271,6 +276,7 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
     override fun configure(config: AtmosphereConfig) {
         framework = config.framework()
         heartBeatInterceptor = framework.atmosphereConfig.stompHeartbeatInvoker()
+        onDisconnectInterceptor = framework.atmosphereConfig.stompOnDisconnectInvoker()
         stompSubscribeHandler = framework.atmosphereConfig.stompSubscribeInvoker()
         stompReceiveFromClientInvoker = framework.atmosphereConfig.stompReceiveInvoker()
         sessionFactory = framework.atmosphereConfig.sessionFactory()

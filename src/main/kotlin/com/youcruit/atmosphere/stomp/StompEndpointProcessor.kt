@@ -4,11 +4,14 @@ import com.youcruit.atmosphere.stomp.api.DefaultTranscoder
 import com.youcruit.atmosphere.stomp.api.MessageDecoder
 import com.youcruit.atmosphere.stomp.api.annotations.StompEndpoint
 import com.youcruit.atmosphere.stomp.api.annotations.StompHeartbeat
+import com.youcruit.atmosphere.stomp.api.annotations.StompOnDisconnect
 import com.youcruit.atmosphere.stomp.api.annotations.StompService
 import com.youcruit.atmosphere.stomp.api.annotations.StompSubscriptionService
 import com.youcruit.atmosphere.stomp.invoker.HeartbeatMethodInvocation
 import com.youcruit.atmosphere.stomp.invoker.InjectingMethodInvocation
+import com.youcruit.atmosphere.stomp.invoker.OnDisconnectMethodInvocation
 import com.youcruit.atmosphere.stomp.invoker.stompHeartbeatInvoker
+import com.youcruit.atmosphere.stomp.invoker.stompOnDisconnectInvoker
 import com.youcruit.atmosphere.stomp.invoker.stompReceiveInvoker
 import com.youcruit.atmosphere.stomp.invoker.stompSubscribeInvoker
 import com.youcruit.atmosphere.stomp.util.FixedUriTemplate
@@ -36,6 +39,9 @@ internal class StompEndpointProcessor : Processor<Any> {
                 }
                 if (method.isAnnotationPresent(StompHeartbeat::class.java)) {
                     stompHeartbeat(framework, method, obj)
+                }
+                if (method.isAnnotationPresent(StompOnDisconnect::class.java)) {
+                    stompOnDisconnect(framework, method, obj)
                 }
             }
         } catch (t: Throwable) {
@@ -111,8 +117,21 @@ internal class StompEndpointProcessor : Processor<Any> {
 
         val heartbeatInvoker = framework.atmosphereConfig.stompHeartbeatInvoker()
 
-
         heartbeatInvoker.endpoints.add(methodInvocation)
+    }
+
+    private fun stompOnDisconnect(framework: AtmosphereFramework, method: Method, obj: Any) {
+        val methodInvocation = OnDisconnectMethodInvocation(
+            method = method,
+            obj = obj
+        )
+        if (method.returnType != Void.TYPE) {
+            throw IllegalArgumentException("Method $method has to be Unit/void")
+        }
+
+        val onDisconnectInvoker = framework.atmosphereConfig.stompOnDisconnectInvoker()
+
+        onDisconnectInvoker.endpoints.add(methodInvocation)
     }
 
     private fun cachedDecoder(framework: AtmosphereFramework, decoder: Class<MessageDecoder<*>>): MessageDecoder<*>? {
