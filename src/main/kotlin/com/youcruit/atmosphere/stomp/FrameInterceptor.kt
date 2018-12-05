@@ -37,6 +37,7 @@ import org.atmosphere.cpr.HeartbeatAtmosphereResourceEvent
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler
 import org.atmosphere.interceptor.InvokationOrder
 import org.atmosphere.util.IOUtils
+import org.atmosphere.websocket.WebSocket
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.IOException
@@ -56,6 +57,7 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
 
     override fun inspect(r: AtmosphereResource): Action {
         super.inspect(r)
+        r as AtmosphereResourceImpl
 
         val body = try {
             IOUtils.readEntirelyAsByte(r)
@@ -68,7 +70,7 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
             } else {
                 val resourceSession = sessionFactory.getSession(r)!!
                 if (resourceSession.protocol.eol(body)) {
-                    val event = HeartbeatAtmosphereResourceEvent(r as AtmosphereResourceImpl)
+                    val event = HeartbeatAtmosphereResourceEvent(r)
                     // Fire event
                     r.notifyListeners(event)
                     return Action.SKIP_ATMOSPHEREHANDLER
@@ -139,7 +141,7 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
         return Action.CANCELLED
     }
 
-    private fun connect(resourceSession: AtmosphereResourceSession, frame: StompFrameFromClient, r: AtmosphereResource): Boolean {
+    private fun connect(resourceSession: AtmosphereResourceSession, frame: StompFrameFromClient, r: AtmosphereResourceImpl): Boolean {
         if (resourceSession.getAttribute(PROTOCOL_VERSION) != null) {
             throw StompErrorException("Already connected")
         }
@@ -174,8 +176,8 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
             frame.headers["host"]
                 ?: throw StompErrorException("Host not set. It's ignored, but required according to the spec.")
         }
-
-        r.addEventListener(onDisconnectInterceptor)
+        val webSocket = r.response.asyncIOWriter as WebSocket
+        webSocket.resource().addEventListener(onDisconnectInterceptor)
 
         resourceSession.subscriptions = Subscriptions()
         val headers = LinkedHashMap(mapOf(
@@ -189,7 +191,7 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
             val heartbeat = selectHeartbeat(frame.headers["heart-beat"], IntRange(0, serverHeartbeat))
             // Do something with heartbeat
             if (!heartbeat.isZero) {
-                r.addEventListener(Heartbeater(heartbeat, r))
+                r.addEventListener(Heartbeater(heartbeat, webSocket))
             }
 
             headers["heart-beat"] = "0,$serverHeartbeat"

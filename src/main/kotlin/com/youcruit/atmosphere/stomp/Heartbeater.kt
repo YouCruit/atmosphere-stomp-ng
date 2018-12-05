@@ -1,19 +1,19 @@
 package com.youcruit.atmosphere.stomp
 
-import org.atmosphere.cpr.AtmosphereResource
 import org.atmosphere.cpr.AtmosphereResourceEvent
 import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter
+import org.atmosphere.websocket.WebSocket
 import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 internal class Heartbeater(
     heartbeatInterval: Duration,
-    private val atmosphereResource: AtmosphereResource
+    private val webSocket: WebSocket
 ) : AtmosphereResourceEventListenerAdapter(), Runnable {
 
     override fun run() {
-        atmosphereResource.write("\n")
+        webSocket.write("\n")
     }
 
     private val heartbeater = heartbeatExecutor.scheduleAtFixedRate(

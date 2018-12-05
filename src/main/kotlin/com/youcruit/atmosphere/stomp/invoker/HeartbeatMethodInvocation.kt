@@ -21,8 +21,8 @@ internal class HeartbeatMethodInvocation(
             }.toTypedArray()
     }
 
-    fun invoke(event: AtmosphereResourceEvent): Any {
+    fun invoke(event: AtmosphereResourceEvent) {
         val params = getParameters(event)
-        return method.invoke(obj, *params)
+        method.invoke(obj, *params)
     }
 }

@@ -1,19 +1,29 @@
 package com.youcruit.atmosphere.stomp.invoker
 
 import org.atmosphere.cpr.AtmosphereConfig
+import org.atmosphere.cpr.AtmosphereResource
 import org.atmosphere.cpr.AtmosphereResourceEvent
-import org.atmosphere.cpr.AtmosphereResourceEventListenerAdapter
 import org.atmosphere.util.Utils
+import org.atmosphere.websocket.WebSocketEventListener
+import org.atmosphere.websocket.WebSocketEventListenerAdapter
 import java.util.LinkedList
 
-internal class StompOnDisconnectInterceptor : AtmosphereResourceEventListenerAdapter() {
+internal class StompOnDisconnectInterceptor : WebSocketEventListenerAdapter() {
     val endpoints = LinkedList<OnDisconnectMethodInvocation>()
 
+    override fun onDisconnect(event: WebSocketEventListener.WebSocketEvent<*>) {
+        onDisconnect(event.webSocket().resource())
+    }
+
     override fun onDisconnect(event: AtmosphereResourceEvent) {
-        if (endpoints.isNotEmpty() && !Utils.pollableTransport(event.resource.transport())) {
-            for (onDisconnectInvocation in endpoints) {
-                onDisconnectInvocation.invoke(event)
-            }
+        if (!Utils.pollableTransport(event.resource.transport())) {
+            onDisconnect(event.resource)
+        }
+    }
+
+    private fun onDisconnect(atmosphereResource: AtmosphereResource) {
+        for (onDisconnectInvocation in endpoints) {
+            onDisconnectInvocation.invoke(atmosphereResource)
         }
     }
 }

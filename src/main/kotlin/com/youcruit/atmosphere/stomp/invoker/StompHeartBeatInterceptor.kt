@@ -11,7 +11,7 @@ internal class StompHeartBeatInterceptor : AtmosphereResourceHeartbeatEventListe
     val endpoints = LinkedList<HeartbeatMethodInvocation>()
 
     override fun onHeartbeat(event: AtmosphereResourceEvent) {
-        if (endpoints.isNotEmpty() && !Utils.pollableTransport(event.resource.transport())) {
+        if (!Utils.pollableTransport(event.resource.transport())) {
             for (heartbeat in endpoints) {
                 heartbeat.invoke(event)
             }
