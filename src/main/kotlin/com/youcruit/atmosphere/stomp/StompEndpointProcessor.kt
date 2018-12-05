@@ -68,7 +68,7 @@ internal class StompEndpointProcessor : Processor<Any> {
 
         val oldEndpoint = invokers.endpoints[uriTemplate]
         if (oldEndpoint != null) {
-            throw IllegalArgumentException("path ${stompServiceAnnotation.value} cannot be registered to $method, since it's already ${oldEndpoint.method}")
+            throw IllegalArgumentException("Path ${stompServiceAnnotation.value} cannot be registered to $method, since it's already ${oldEndpoint.method}")
         }
 
         invokers.endpoints[uriTemplate] = methodInvocation
@@ -86,7 +86,7 @@ internal class StompEndpointProcessor : Processor<Any> {
         )
 
         if (method.returnType != Boolean::class.java) {
-            throw IllegalArgumentException("method $method has to return nonnull boolean value")
+            throw IllegalArgumentException("Method $method has to return nonnull boolean value")
         }
 
         val invokers = framework.atmosphereConfig.stompSubscribeInvoker()
@@ -94,7 +94,7 @@ internal class StompEndpointProcessor : Processor<Any> {
         val template = FixedUriTemplate(stompSubscriptionService.value)
         val oldEndpoint = invokers.endpoints[template]
         if (oldEndpoint != null) {
-            throw IllegalArgumentException("path ${stompSubscriptionService.value} cannot be registered to $method, since it's already ${oldEndpoint.method}")
+            throw IllegalArgumentException("Path ${stompSubscriptionService.value} cannot be registered to $method, since it's already ${oldEndpoint.method}")
         }
 
         invokers.endpoints[template] = methodInvocation
@@ -106,12 +106,13 @@ internal class StompEndpointProcessor : Processor<Any> {
             obj = obj
         )
         if (method.returnType != Void.TYPE) {
-            throw IllegalArgumentException("method $method has to return nonnull boolean value")
+            throw IllegalArgumentException("Method $method has to be Unit/void")
         }
 
-        val invokers = framework.atmosphereConfig.stompHeartbeatInvoker()
+        val heartbeatInvoker = framework.atmosphereConfig.stompHeartbeatInvoker()
 
-        invokers.endpoints.add(methodInvocation)
+
+        heartbeatInvoker.endpoints.add(methodInvocation)
     }
 
     private fun cachedDecoder(framework: AtmosphereFramework, decoder: Class<MessageDecoder<*>>): MessageDecoder<*>? {

@@ -115,10 +115,10 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
                             .getSession(r)
                             .subscriptions
                             .createFrames(
-                                    destination = e.destination,
-                                    protocol = resourceSession.protocol,
-                                    message = e.message,
-                                    extraHeaders = e.headers
+                                destination = e.destination,
+                                protocol = resourceSession.protocol,
+                                message = e.message,
+                                extraHeaders = e.headers
                             )
                         r.write(frames.toByteArray())
                     } catch (e: StompException) {
@@ -201,7 +201,11 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
         return true
     }
 
-    private fun selectHeartbeat(heartBeatHeader: String?, @Suppress("UNUSED_PARAMETER") serverHeartbeat: IntRange): Duration {
+    private fun selectHeartbeat(
+        heartBeatHeader: String?,
+        @Suppress("UNUSED_PARAMETER")
+        serverHeartbeat: IntRange
+    ): Duration {
         val clientInterval = heartBeatHeader
             ?.let {
                 HEART_BEAT_REGEX.matchEntire(it)
@@ -215,7 +219,13 @@ class FrameInterceptor : AtmosphereInterceptorAdapter() {
         return Duration.ofMillis(clientInterval.last.toLong())
     }
 
-    private fun errorAndClose(stompProtocol: StompProtocol, e: Exception, receipt: String?, r: AtmosphereResource, message: String = e.message ?: ""): Action {
+    private fun errorAndClose(
+        stompProtocol: StompProtocol,
+        e: Exception,
+        receipt: String?,
+        r: AtmosphereResource,
+        message: String = e.message ?: ""
+    ): Action {
         logger.error("STOMP ERROR: ${e.message}", e)
 
         val headers = LinkedHashMap<String, String>()
