@@ -60,7 +60,7 @@ abstract class StompProtocol(
             }
             baos.write(byte)
         }
-        throw StompErrorException("data too long")
+        throw StompErrorException("data too long: ${baos.asString()}")
     }
 
     private fun InputStream.readHeaderLines(): Map<String, String> {

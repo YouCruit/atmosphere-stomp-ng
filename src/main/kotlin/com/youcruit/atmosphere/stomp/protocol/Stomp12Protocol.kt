@@ -23,7 +23,7 @@ object Stomp12Protocol : StompProtocol(1.2f) {
             }
             baos.write(byte)
         }
-        throw StompErrorException("data too long")
+        throw StompErrorException("data too long: ${baos.asString()}")
     }
 
     override fun eol(bytes: ByteArray): Boolean {
