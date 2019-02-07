@@ -48,7 +48,7 @@ abstract class StompProtocol(
     open fun InputStream.readCommand() =
         ClientStompCommand.valueOf(readUtf8Line(14))
 
-    protected open fun InputStream.readUtf8Line(atMost: Int = 2048): String {
+    protected open fun InputStream.readUtf8Line(atMost: Int = 1048576): String {
         val baos = EfficientByteArrayOutputStream()
         for (i in 1..atMost) {
             val byte = read()
