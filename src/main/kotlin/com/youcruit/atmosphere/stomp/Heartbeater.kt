@@ -34,7 +34,7 @@ internal class Heartbeater(
     companion object {
         @Volatile
         private var heartbeatThreadsStarted = 0
-        private val heartbeatExecutor = Executors.newScheduledThreadPool(0) {
+        private val heartbeatExecutor = Executors.newScheduledThreadPool(1) {
             Thread(it, "Heartbeat ${heartbeatThreadsStarted++}")
         }!!
     }
