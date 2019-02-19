@@ -82,6 +82,6 @@ task javadocJar(type: Jar) {
 
 task sourceJar(type: Jar) {
     from sourceSets.main.allSource
-    classifier = 'source'
+    classifier = 'sources'
 }
 assemble.dependsOn sourceJar
